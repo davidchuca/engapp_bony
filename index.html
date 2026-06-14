@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英文單字智慧測驗系統</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --success: #2ec4b6;
+            --danger: #e71d36;
+            --background: #f8f9fa;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background);
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        h1, h2 { text-align: center; color: #2c3e50; }
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: #e2e8f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .panel { display: none; }
+        .panel.active { display: block; }
+        
+        /* 篩選區 */
+        .filter-section {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        /* 單字清單樣式 */
+        .word-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .word-table th, .word-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+        .word-table th { background: #f1f5f9; }
+        .btn-audio {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* 測試區樣式 */
+        .quiz-box {
+            text-align: center;
+            padding: 30px 10px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            min-height: 200px;
+        }
+        .question {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+        .input-answer {
+            font-size: 20px;
+            padding: 10px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto 20px;
+        }
+        .option-btn {
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .btn-submit {
+            padding: 10px 25px;
+            font-size: 18px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .feedback {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            min-height: 30px;
+        }
+        .feedback.correct { color: var(--success); }
+        .feedback.wrong { color: var(--danger); }
+        .stats-info {
+            font-size: 14px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 英文單字智慧複習系統</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('list-tab')">課文單字瀏覽</button>
+        <button class="tab-btn" onclick="switchTab('quiz1-tab')">中翻英填空測試</button>
+        <button class="tab-btn" onclick="switchTab('quiz2-tab')">英翻中選擇測試</button>
+    </div>
+
+    <div class="filter-section">
+        <strong>選擇範圍（可多選）：</strong>
+        <div id="lesson-filters" class="checkbox-group">載入資料中...</div>
+    </div>
+
+    <hr>
+
+    <div id="list-tab" class="panel active">
+        <h2>單字清單</h2>
+        <table class="word-table">
+            <thead>
+                <tr>
+                    <th>課別/單元</th>
+                    <th>英文單字</th>
+                    <th>發音</th>
+                    <th>中文解釋</th>
+                    <th>目前錯題權重 (越高越常出)</th>
+                </tr>
+            </thead>
+            <tbody id="word-list-body">
+                <tr><td colspan="5" style="text-align:center;">請先勾選上方單元範圍</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="quiz1-tab" class="panel">
+        <h2>模式 1：中翻英填空</h2>
+        <div class="quiz-box">
+            <div id="q1-question" class="question">請選擇範圍開始測驗</div>
+            <div id="q1-area" style="display:none;">
+                <input type="text" id="q1-input" class="input-answer" placeholder="請輸入英文單字" autocomplete="off" onkeyup="if(event.key==='Enter')checkQuiz1()"><br>
+                <button class="btn-submit" id="q1-btn" onclick="checkQuiz1()">送出答案</button>
+                <div id="q1-feedback" class="feedback"></div>
+                <div id="q1-stats" class="stats-info"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="quiz2-tab" class="panel">
+        <h2>模式 2：英翻中選擇</h2>
+        <div class="quiz-box">
+            <div id="q2-question" class="question">請選擇範圍開始測驗</div>
+            <div id="q2-area" style="display:none;">
+                <div id="q2-options" class="options-grid"></div>
+                <div id="q2-feedback" class="feedback"></div>
+                <div id="q2-stats" class="stats-info"></div>
+                <button class="btn-submit" id="q2-next-btn" onclick="nextQuiz2()" style="display:none;">下一題</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全域變數
+    let allWords = [];       // 從 CSV 載入的所有原始單字
+    let activePool = [];     // 目前勾選範圍內的單字池
+    let currentQuestion = null; // 當前題目單字
+    const WEIGHT_KEY = "word_weights_v1";
+    let wordWeights = JSON.parse(localStorage.getItem(WEIGHT_KEY)) || {};
+
+    // 網頁載入後自動讀取 CSV
+    window.addEventListener('DOMContentLoaded', () => {
+        fetch('words.csv')
+            .then(response => {
+                if (!response.ok) throw new Error('找不到 words.csv 檔案，請確認路徑');
+                return response.text();
+            })
+            .then(text => {
+                allWords = parseCSV(text);
+                initWeights();
+                renderFilters();
+                updateActivePool();
+            })
+            .catch(err => {
+                alert('錯誤: ' + err.message + '\n請確保網頁與 CSV 放在同一個資料夾中運作。');
+            });
+    });
+
+    // 輕量化 CSV 解析器 (專門處理你的欄位結構)
+    function parseCSV(text) {
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        if (lines.length <= 1) return [];
+        
+        // 抓取表頭索引
+        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        const idxLesson = headers.indexOf('lesson');
+        const idxTitle = headers.indexOf('title');
+        const idxWord = headers.indexOf('word');
+        const idxTranslation = headers.indexOf('translation');
+
+        const result = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.trim());
+            if (cols.length < headers.length) continue;
+            
+            result.push({
+                lesson: cols[idxLesson] || '',
+                title: cols[idxTitle] || '',
+                word: cols[idxWord] || '',
+                translation: cols[idxTranslation] || '',
+                id: `${cols[idxLesson]}_${cols[idxWord]}` // 建立唯一識別碼
+            });
+        }
+        return result;
+    }
+
+    // 初始化權重功能（預設值為 10）
+    function initWeights() {
+        allWords.forEach(w => {
+            if (wordWeights[w.id] === undefined) {
+                wordWeights[w.id] = 10; 
+            }
+        });
+        saveWeights();
+    }
+
+    function saveWeights() {
+        localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights));
+    }
+
+    // 產生選單/課的篩選勾選框
+    function renderFilters() {
+        // 取得所有不重複的 lesson + Title 組合
+        const lessons = [];
+        const seen = new Set();
+        allWords.forEach(w => {
+            const key = `${w.lesson}-${w.title}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                lessons.push({ id: w.lesson, title: w.title });
+            }
+        });
+
+        const container = document.getElementById('lesson-filters');
+        container.innerHTML = '';
+        
+        lessons.forEach((l, index) => {
+            const label = document.createElement('label');
+            label.className = 'checkbox-label';
+            // 預設勾選第一個單元
+            const checked = index === 0 ? 'checked' : '';
+            label.innerHTML = `<input type="checkbox" value="${l.id}" ${checked} onchange="updateActivePool()"> L${l.id} (${l.title})`;
+            container.appendChild(label);
+        });
+    }
+
+    // 當勾選範圍改變時，更新目前要測試/瀏覽的單字池
+    function updateActivePool() {
+        const checkedLessons = Array.from(document.querySelectorAll('#lesson-filters input:checked')).map(el => el.value);
+        activePool = allWords.filter(w => checkedLessons.includes(w.lesson));
+        
+        // 重新渲染清單與重置題目
+        renderWordList();
+        resetQuiz();
+    }
+
+    // 功能 4：渲染課文單字清單
+    function renderWordList() {
+        const tbody = document.getElementById('word-list-body');
+        if (activePool.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = activePool.map(w => `
+            <tr>
+                <td>L${w.lesson} - ${w.title}</td>
+                <td style="font-weight:bold; font-size:18px;">${w.word}</td>
+                <td><button class="btn-audio" onclick="speak('${w.word}')">🔊</button></td>
+                <td>${w.translation}</td>
+                <td><span style="color:#e71d36; font-weight:bold;">${wordWeights[w.id]}</span> 籤</td>
+            </tr>
+        `).join('');
+    }
+
+    // 內建英文發音功能
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // 停止上一個正在發音的
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85; // 速度稍微調慢一點點，方便聽清楚
+            window.speechSynthesis.speak(utterance);
+        } else {
+            alert('抱歉，您的瀏覽器不支援發音功能。');
+        }
+    }
+
+    // 功能 5：核心「權重隨機抽題算法」
+    function getRandomWordByWeight() {
+        if (activePool.length === 0) return null;
+        
+        // 1. 計算當前池子裡所有單字的權重總和
+        let totalWeight = 0;
+        activePool.forEach(w => {
+            totalWeight += (wordWeights[w.id] || 10);
+        });
+
+        // 2. 抽籤：丟出一個 0 ~ 總權重 之間的隨機數
+        let randomNum = Math.random() * totalWeight;
+
+        // 3. 尋找這個隨機數落在線段的哪一個單字區間
+        for (let i = 0; i < activePool.length; i++) {
+            const w = activePool[i];
+            const weight = wordWeights[w.id] || 10;
+            if (randomNum < weight) {
+                return w;
+            }
+            randomNum -= weight;
+        }
+        return activePool[activePool.length - 1];
+    }
+
+    // 處理答題結果與調整權重
+    function handleAnswerResult(isCorrect, wordObj) {
+        const currentWeight = wordWeights[wordObj.id] || 10;
+        if (isCorrect) {
+            // 答對了：調降權重（變少出現），最低不低於 1
+            wordWeights[wordObj.id] = Math.max(1, currentWeight - 2);
+        } else {
+            // 答錯了：大幅調高權重（變常出現），最高不超過 40
+            wordWeights[wordObj.id] = Math.min(40, currentWeight + 5);
+        }
+        saveWeights();
+        renderWordList(); // 即時更新清單中的權重分數
+    }
+
+    // 重置所有測驗畫面
+    function resetQuiz() {
+        currentQuestion = null;
+        
+        // 模式 1 重置
+        document.getElementById('q1-area').style.display = 'none';
+        document.getElementById('q1-question').innerText = activePool.length > 0 ? '準備就緒，按 Enter 或送出開始' : '請選擇範圍開始測驗';
+        document.getElementById('q1-feedback').innerText = '';
+        document.getElementById('q1-input').value = '';
+        if(activePool.length > 0) nextQuiz1();
+
+        // 模式 2 重置
+        document.getElementById('q2-area').style.display = 'none';
+        document.getElementById('q2-question').innerText = activePool.length > 0 ? '準備就緒' : '請選擇範圍開始測驗';
+        document.getElementById('q2-feedback').innerText = '';
+        if(activePool.length > 0) nextQuiz2();
+    }
+
+    // --- 模式 1：中翻英填空邏輯 ---
+    function nextQuiz1() {
+        currentQuestion = getRandomWordByWeight();
+        if(!currentQuestion) return;
+        
+        document.getElementById('q1-question').innerText = `請寫出英文：「 ${currentQuestion.translation} 」`;
+        document.getElementById('q1-input').value = '';
+        document.getElementById('q1-feedback').innerText = '';
+        document.getElementById('q1-area').style.display = 'block';
+        document.getElementById('q1-input').focus();
+        document.getElementById('q1-stats').innerText = `目前此字權重：${wordWeights[currentQuestion.id]} (越接近 1 代表越熟練)`;
+    }
+
+    function checkQuiz1() {
+        if (!currentQuestion) return;
+        const inputField = document.getElementById('q1-input');
+        const userAnswer = inputField.value.trim().toLowerCase();
+        const correctAnswer = currentQuestion.word.trim().toLowerCase();
+        const feedback = document.getElementById('q1-feedback');
+
+        if(userAnswer === "") return;
+
+        if (userAnswer === correctAnswer) {
+            feedback.className = "feedback correct";
+            feedback.innerText = `⭕ 答對了！發音：`;
+            speak(currentQuestion.word);
+            handleAnswerResult(true, currentQuestion);
+            setTimeout(nextQuiz1, 1500); // 1.5 秒後自動下一題
+        } else {
+            feedback.className = "feedback wrong";
+            feedback.innerText = `❌ 答錯囉！正確答案是：${currentQuestion.word}`;
+            speak(currentQuestion.word);
+            handleAnswerResult(false, currentQuestion);
+            inputField.focus();
+            inputField.select();
+        }
+    }
+
+    // --- 模式 2：英翻中選擇邏輯 ---
+    function nextQuiz2() {
+        currentQuestion = getRandomWordByWeight();
+        if(!currentQuestion) return;
+
+        document.getElementById('q2-question').innerText = currentQuestion.word;
+        speak(currentQuestion.word); // 出題時自動發音
+        document.getElementById('q2-feedback').innerText = '';
+        document.getElementById('q2-next-btn').style.display = 'none';
+        document.getElementById('q2-area').style.display = 'block';
+        document.getElementById('q2-stats').innerText = `目前此字權重：${wordWeights[currentQuestion.id]}`;
+
+        // 建立 4 個選項（1正 3反）
+        let options = [currentQuestion.translation];
+        
+        // 從所有的單字撈取錯誤答案（不限於目前的 pool，這樣選項才夠多）
+        let wrongAnswers = allWords
+            .filter(w => w.translation !== currentQuestion.translation)
+            .map(w => w.translation);
+        
+        // 去除重複的中文意思
+        wrongAnswers = [...new Set(wrongAnswers)];
+        
+        // 隨機洗牌並抓 3 個
+        wrongAnswers.sort(() => Math.random() - 0.5);
+        for(let i=0; i<3; i++) {
+            if(wrongAnswers[i]) options.push(wrongAnswers[i]);
+        }
+
+        // 把這 4 個選項再次隨機打亂
+        options.sort(() => Math.random() - 0.5);
+
+        // 渲染按鈕
+        const optionsContainer = document.getElementById('q2-options');
+        optionsContainer.innerHTML = options.map(opt => `
+            <button class="option-btn" onclick="checkQuiz2('${opt}', this)">${opt}</button>
+        `).join('');
+    }
+
+    function checkQuiz2(selectedAnswer, btnElement) {
+        const feedback = document.getElementById('q2-feedback');
+        const correctAnswer = currentQuestion.translation;
+        
+        // 停用所有按鈕防止重複點擊
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedAnswer === correctAnswer) {
+            btnElement.style.background = "#2ec4b6";
+            btnElement.style.color = "white";
+            feedback.className = "feedback correct";
+            feedback.innerText = "⭕ 答對了！";
+            handleAnswerResult(true, currentQuestion);
+            setTimeout(nextQuiz2, 1200);
+        } else {
+            btnElement.style.background = "#e71d36";
+            btnElement.style.color = "white";
+            feedback.className = "feedback wrong";
+            feedback.innerText = `❌ 答錯了！正確答案是：「${correctAnswer}」`;
+            handleAnswerResult(false, currentQuestion);
+            document.getElementById('q2-next-btn').style.display = 'inline-block';
+        }
+    }
+
+    // 頁籤切換功能
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active'));
+        
+        // 找到對應的按鈕並高亮
+        event.target.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+
+        // 切換時順便重新對焦或重置題目
+        if (tabId === 'quiz1-tab' && activePool.length > 0 && !currentQuestion) nextQuiz1();
+        if (tabId === 'quiz2-tab' && activePool.length > 0 && !currentQuestion) nextQuiz2();
+    }
+</script>
+
+</body>
+</html>
