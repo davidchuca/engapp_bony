@@ -243,13 +243,14 @@
             });
     });
 
-    // 輕量化 CSV 解析器 (專門處理你的欄位結構)
+    // 修正後的精準 CSV 解析器
     function parseCSV(text) {
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        // 同時相容 \r\n (Windows) 與 \n (Mac/Linux) 進行斷行切開
+        const lines = text.split(/\r?\n/).map(line => line.trim()).filter(line => line.length > 0);
         if (lines.length <= 1) return [];
         
-        // 抓取表頭索引
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        // 抓取表頭索引，並徹底清除可能殘留的隱形字元
+        const headers = lines[0].split(',').map(h => h.trim().replace(/["']/g, "").toLowerCase());
         const idxLesson = headers.indexOf('lesson');
         const idxTitle = headers.indexOf('title');
         const idxWord = headers.indexOf('word');
@@ -257,16 +258,23 @@
 
         const result = [];
         for (let i = 1; i < lines.length; i++) {
-            const cols = lines[i].split(',').map(c => c.trim());
+            // 這裡同樣精準切開欄位並清除欄位內可能包裹的引號與隱形空白
+            const cols = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ""));
             if (cols.length < headers.length) continue;
             
-            result.push({
-                lesson: cols[idxLesson] || '',
-                title: cols[idxTitle] || '',
-                word: cols[idxWord] || '',
-                translation: cols[idxTranslation] || '',
-                id: `${cols[idxLesson]}_${cols[idxWord]}` // 建立唯一識別碼
-            });
+            const wordText = cols[idxWord] || '';
+            const transText = cols[idxTranslation] || '';
+
+            // 確保資料有效才放進題庫
+            if (wordText && transText) {
+                result.push({
+                    lesson: cols[idxLesson] || '',
+                    title: cols[idxTitle] || '',
+                    word: wordText,
+                    translation: transText,
+                    id: `${cols[idxLesson] || 'L'}_${wordText}` // 建立唯一識別碼
+                });
+            }
         }
         return result;
     }
