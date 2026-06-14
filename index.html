@@ -3,134 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字智慧測驗系統 v3.2</title>
+    <title>英文單字智慧測驗系統 最終版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        :root {
-            --primary: #4a90e2;
-            --success: #2ec4b6;
-            --danger: #e71d36;
-            --background: #f8f9fa;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--background);
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
+        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--background); color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         h1, h2 { text-align: center; color: #2c3e50; }
-        .tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .tab-btn {
-            padding: 10px 20px;
-            border: none;
-            background: #e2e8f0;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: var(--primary);
-            color: white;
-        }
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
         .panel { display: none; }
         .panel.active { display: block; }
-        
-        /* 篩選區 */
-        .filter-section {
-            background: #edf2f7;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .checkbox-group {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 10px;
-        }
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
-
-        /* 單字清單樣式 */
-        .word-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-        .word-table th, .word-table td {
-            border-bottom: 1px solid #e2e8f0;
-            padding: 12px;
-            text-align: left;
-        }
+        .filter-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; }
+        .checkbox-label { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+        .word-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .word-table th, .word-table td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
         .word-table th { background: #f1f5f9; }
-        .btn-audio {
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-        }
+        .btn-audio { background: none; border: none; font-size: 18px; cursor: pointer; }
+        .quiz-container { text-align: center; padding: 20px 10px; }
+        .quiz-box { text-align: center; padding: 30px 10px; border: 2px dashed #cbd5e1; border-radius: 8px; min-height: 220px; background: #fff; margin-bottom: 20px; }
+        .quiz-progress { font-size: 16px; color: #64748b; margin-bottom: 15px; font-weight: bold; }
+        .question { font-size: 32px; font-weight: bold; margin-bottom: 20px; color: #1e293b; }
+        .input-answer { font-size: 20px; padding: 10px; width: 80%; max-width: 300px; text-align: center; border: 2px solid #cbd5e1; border-radius: 6px; margin-bottom: 15px; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-width: 500px; margin: 0 auto 20px; }
+        .option-btn { padding: 15px; font-size: 18px; border: 2px solid #e2e8f0; background: white; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .option-btn:hover:not(:disabled) { background: #f1f5f9; border-color: #cbd5e1; }
+        .nav-controls { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        .btn-nav { padding: 10px 20px; font-size: 16px; border: none; border-radius: 6px; cursor: pointer; background: #64748b; color: white; font-weight: bold; }
+        .btn-nav:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .btn-submit { background: var(--primary); color: white; padding: 10px 25px; font-size: 18px; border: none; border-radius: 6px; cursor: pointer; }
+        .btn-finish { background: #059669; color: white; }
+        .feedback { font-size: 18px; font-weight: bold; margin-top: 12px; min-height: 25px; }
+        .feedback.correct { color: var(--success); }
+        .feedback.wrong { color: var(--danger); }
+        .stats-info { font-size: 13px; color: #94a3b8; margin-top: 5px; }
+        .report-box { background: #f1f5f9; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: left; }
+        .report-item { padding: 8px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
 
-        /* 測試區分頁樣式 */
-        .quiz-container {
-            text-align: center;
-            padding: 20px 10px;
+<div class="container">
+    <h1>📚 英文單字智慧測驗系統</h1>
+    
+    <div class="tabs">
+        <button class="tab-btn active" id="btn-list-tab" onclick="switchTab('list-tab')">課文單字瀏覽</button>
+        <button class="tab-btn" id="btn-quiz1-tab" onclick="switchTab('quiz1-tab')">中翻英填空測試</button>
+        <button class="tab-btn" id="btn-quiz2-tab" onclick="switchTab('quiz2-tab')">英翻中選擇測試</button>
+    </div>
+
+    <div class="filter-section" id="global-filter">
+        <strong>選擇範圍（可多選）：</strong>
+        <div id="lesson-filters" class="checkbox-group">載入資料中...</div>
+    </div>
+
+    <hr>
+
+    <div id="list-tab" class="panel active">
+        <h2>單字清單</h2>
+        <table class="word-table">
+            <thead>
+                <tr>
+                    <th>課別/單元</th>
+                    <th>英文單字</th>
+                    <th>發音</th>
+                    <th>中文解釋</th>
+                    <th>目前錯題權重</th>
+                </tr>
+            </thead>
+            <tbody id="word-list-body">
+                <tr><td colspan="5" style="text-align:center;">請先勾選上方單元範圍</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="quiz1-tab" class="panel">
+        <h2>模式 1：中翻英填空 (10題挑戰賽)</h2>
+        <div class="quiz-container">
+            <div id="q1-start-screen"><button class="btn-submit" onclick="startSession(1)">開始 10 題測試</button></div>
+            <div id="q1-play-screen" style="display:none;">
+                <div class="quiz-progress" id="q1-progress">第 1 / 10 題</div>
+                <div class="quiz-box">
+                    <div id="q1-question" class="question">題目</div>
+                    <input type="text" id="q1-input" class="input-answer" placeholder="請輸入英文單字" autocomplete="off" onkeyup="if(event.key==='Enter')saveAnswer1()"><br>
+                    <div id="q1-feedback" class="feedback"></div>
+                    <div id="q1-stats" class="stats-info"></div>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn-nav" id="q1-prev" onclick="prevQuestion(1)">← 上一題</button>
+                    <button class="btn-submit" id="q1-save" onclick="saveAnswer1()">確認本題答案</button>
+                    <button class="btn-nav" id="q1-next" onclick="nextQuestion(1)">下一題 →</button>
+                    <button class="btn-nav btn-finish" id="q1-finish" onclick="finishSession(1)" style="display:none;">完成測試 (交卷)</button>
+                </div>
+            </div>
+            <div id="q1-result-screen" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div id="quiz2-tab" class="panel">
+        <h2>模式 2：英翻中選擇 (10題挑戰賽)</h2>
+        <div class="quiz-container">
+            <div id="q2-start-screen"><button class="btn-submit" onclick="startSession(2)">開始 10 題測試</button></div>
+            <div id="q2-play-screen" style="display:none;">
+                <div class="quiz-progress" id="q2-progress">第 1 / 10 題</div>
+                <div class="quiz-box">
+                    <div id="q2-question" class="question">題目</div>
+                    <div id="q2-options" class="options-grid"></div>
+                    <div id="q2-feedback" class="feedback"></div>
+                    <div id="q2-stats" class="stats-info"></div>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn-nav" id="q2-prev" onclick="prevQuestion(2)">← 上一題</button>
+                    <button class="btn-nav" id="q2-next" onclick="nextQuestion(2)">下一題 →</button>
+                    <button class="btn-nav btn-finish" id="q2-finish" onclick="finishSession(2)" style="display:none;">完成測試 (交卷)</button>
+                </div>
+            </div>
+            <div id="q2-result-screen" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 已經將你的資料轉換為標準 CSV 格式，完美解決白屏問題
+    const csvDataString = `books,lesson,Title,word,translation,level
+aa,1,At the Lake,boat,船,1
+aa,1,At the Lake,dock,甲板,1
+aa,1,At the Lake,fish,魚,1
+aa,1,At the Lake,lake,湖,1
+aa,1,At the Lake,rock,石頭,1
+aa,1,At the Lake,swimsuit,泳衣,1
+aa,2,The Backyard,backyard,後院,1
+aa,2,The Backyard,fence,籬笆,1
+aa,2,The Backyard,dog,狗,1
+aa,2,The Backyard,swing,鞦韆,1
+aa,2,The Backyard,ball,球,1
+aa,2,The Backyard,flower,花,1
+aa,2,The Backyard,tree,樹,1
+aa,2,The Backyard,hose,水管,1
+aa,3,The Baseball Game,base,壘包,1
+aa,3,The Baseball Game,baseball,棒球,1
+aa,3,The Baseball Game,bat,球棒,1
+aa,3,The Baseball Game,helmet,頭盔,1
+aa,3,The Baseball Game,team,隊伍,1
+aa,3,The Baseball Game,uniform,制服,1
+aa,4,Big,house,房子,1
+aa,4,Big,dog,狗,1
+aa,4,Big,car,車,1
+aa,4,Big,bus,巴士,1
+aa,4,Big,plane,飛機,1
+aa,4,Big,tree,樹,1
+aa,4,Big,elephant,大象,1
+aa,4,Big,dinosaur,恐龍,1
+aa,5,The Birthday Party,birthday,生日,1
+aa,5,The Birthday Party,balloon,氣球,1
+aa,5,The Birthday Party,candle,蠟蠋,1
+aa,5,The Birthday Party,gift,禮物,1
+aa,5,The Birthday Party,guest,訪客,1
+aa,5,The Birthday Party,singing,唱歌,1
+aa,6,Black,cape,披風,1
+aa,6,Black,suit,西裝,1
+aa,6,Black,sheet,床單,1
+aa,6,Black,tie,領結,1
+aa,6,Black,stage,舞台,1
+aa,6,Black,wand,魔法棒,1
+aa,6,Black,rabbit,免子,1`;
+
+    let allWords = [];       
+    let activePool = [];     
+    const WEIGHT_KEY = "word_weights_final";
+    let wordWeights = JSON.parse(localStorage.getItem(WEIGHT_KEY)) || {};
+    let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        Papa.parse(csvDataString.trim(), {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) { processParsedData(results.data); }
+        });
+    });
+
+    function processParsedData(data) {
+        allWords = [];
+        data.forEach(row => {
+            const keys = Object.keys(row);
+            const keyLesson = keys.find(k => k.toLowerCase() === 'lesson');
+            const keyTitle = keys.find(k => k.toLowerCase() === 'title');
+            const keyWord = keys.find(k => k.toLowerCase() === 'word');
+            const keyTrans = keys.find(k => k.toLowerCase() === 'translation');
+
+            if (row[keyWord] && row[keyTrans]) {
+                allWords.push({
+                    lesson: row[keyLesson] ? row[keyLesson].trim() : '',
+                    title: row[keyTitle] ? row[keyTitle].trim() : '',
+                    word: row[keyWord].trim(),
+                    translation: row[keyTrans].trim(),
+                    id: `${row[keyLesson]}_${row[keyWord]}`
+                });
+            }
+        });
+        initWeights(); renderFilters(); updateActivePool();
+    }
+
+    function initWeights() {
+        allWords.forEach(w => { if (wordWeights[w.id] === undefined) wordWeights[w.id] = 10; });
+        saveWeights();
+    }
+    function saveWeights() { localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights)); }
+
+    function renderFilters() {
+        const lessons = [];
+        const seen = new Set();
+        allWords.forEach(w => {
+            const key = `${w.lesson}-${w.title}`;
+            if (!seen.has(key)) { seen.add(key); lessons.push({ id: w.lesson, title: w.title }); }
+        });
+        lessons.sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
+
+        const container = document.getElementById('lesson-filters');
+        container.innerHTML = '';
+        lessons.forEach((l, idx) => {
+            const label = document.createElement('label');
+            label.className = 'checkbox-label';
+            const checked = idx === 0 ? 'checked' : ''; 
+            label.innerHTML = `<input type="checkbox" value="${l.id}" ${checked} onchange="updateActivePool()"> L${l.id} (${l.title})`;
+            container.appendChild(label);
+        });
+    }
+
+    function updateActivePool() {
+        const checkedLessons = Array.from(document.querySelectorAll('#lesson-filters input:checked')).map(el => el.value);
+        activePool = allWords.filter(w => checkedLessons.includes(w.lesson));
+        renderWordList();
+        document.getElementById('q1-start-screen').style.display = 'block'; document.getElementById('q1-play-screen').style.display = 'none'; document.getElementById('q1-result-screen').style.display = 'none';
+        document.getElementById('q2-start-screen').style.display = 'block'; document.getElementById('q2-play-screen').style.display = 'none'; document.getElementById('q2-result-screen').style.display = 'none';
+    }
+
+    function renderWordList() {
+        const tbody = document.getElementById('word-list-body');
+        if (activePool.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>'; return;
         }
-        .quiz-box {
-            text-align: center;
-            padding: 30px 10px;
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            min-height: 220px;
-            background: #fff;
-            margin-bottom: 20px;
+        tbody.innerHTML = activePool.map(w => `
+            <tr>
+                <td>L${w.lesson} - ${w.title}</td>
+                <td style="font-weight:bold; font-size:18px;">${w.word}</td>
+                <td><button class="btn-audio" onclick="speak('${w.word}')">🔊</button></td>
+                <td>${w.translation}</td>
+                <td><span style="color:#e71d36; font-weight:bold;">${wordWeights[w.id]}</span> 籤</td>
+            </tr>
+        `).join('');
+    }
+
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US'; utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
         }
-        .quiz-progress {
-            font-size: 16px;
-            color: #64748b;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-        .question {
-            font-size: 32px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #1e293b;
-        }
-        .input-answer {
-            font-size: 20px;
-            padding: 10px;
-            width: 80%;
-            max-width: 300px;
-            text-align: center;
-            border: 2px solid #cbd5e1;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            max-width: 500px;
-            margin: 0 auto 20px;
-        }
-        .option-btn
+    }
+
+    function getRandomWordByWeight() {
+        if (activePool.length === 0) return null;
+        let total
