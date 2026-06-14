@@ -21,8 +21,7 @@
         .word-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .word-table th, .word-table td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
         .word-table th { background: #f1f5f9; }
-        .btn-audio { background: none; border: none; font-size: 18px; cursor: pointer; margin-right: 5px; transition: transform 0.1s;}
-        .btn-audio:hover { transform: scale(1.2); }
+        .btn-audio { background: none; border: none; font-size: 18px; cursor: pointer; }
         .quiz-container { text-align: center; padding: 20px 10px; }
         .quiz-box { text-align: center; padding: 30px 10px; border: 2px dashed #cbd5e1; border-radius: 8px; min-height: 220px; background: #fff; margin-bottom: 20px; }
         .quiz-progress { font-size: 16px; color: #64748b; margin-bottom: 15px; font-weight: bold; }
@@ -69,7 +68,8 @@
                 <tr>
                     <th>課別/單元</th>
                     <th>英文單字</th>
-                    <th>發音 (正常/慢速)</th> <th>中文解釋</th>
+                    <th>發音</th>
+                    <th>中文解釋</th>
                     <th>目前錯題權重</th>
                 </tr>
             </thead>
@@ -84,4 +84,313 @@
         <div class="quiz-container">
             <div id="q1-start-screen"><button class="btn-submit" onclick="startSession(1)" id="q1-start-btn" disabled>資料載入中</button></div>
             <div id="q1-play-screen" style="display:none;">
-                <div
+                <div class="quiz-progress" id="q1-progress">第 1 / 10 題</div>
+                <div class="quiz-box">
+                    <div id="q1-question" class="question">題目</div>
+                    <input type="text" id="q1-input" class="input-answer" placeholder="請輸入英文單字" autocomplete="off" onkeyup="if(event.key==='Enter')saveAnswer1()"><br>
+                    <div id="q1-feedback" class="feedback"></div>
+                    <div id="q1-stats" class="stats-info"></div>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn-nav" id="q1-prev" onclick="prevQuestion(1)">← 上一題</button>
+                    <button class="btn-submit" id="q1-save" onclick="saveAnswer1()">確認本題答案</button>
+                    <button class="btn-nav" id="q1-next" onclick="nextQuestion(1)">下一題 →</button>
+                    <button class="btn-nav btn-finish" id="q1-finish" onclick="finishSession(1)" style="display:none;">完成測試 (交卷)</button>
+                </div>
+            </div>
+            <div id="q1-result-screen" style="display:none;"></div>
+        </div>
+    </div>
+
+    <div id="quiz2-tab" class="panel">
+        <h2>模式 2：英翻中選擇 (10題挑戰賽)</h2>
+        <div class="quiz-container">
+            <div id="q2-start-screen"><button class="btn-submit" onclick="startSession(2)" id="q2-start-btn" disabled>資料載入中</button></div>
+            <div id="q2-play-screen" style="display:none;">
+                <div class="quiz-progress" id="q2-progress">第 1 / 10 題</div>
+                <div class="quiz-box">
+                    <div id="q2-question" class="question">題目</div>
+                    <div id="q2-options" class="options-grid"></div>
+                    <div id="q2-feedback" class="feedback"></div>
+                    <div id="q2-stats" class="stats-info"></div>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn-nav" id="q2-prev" onclick="prevQuestion(2)">← 上一題</button>
+                    <button class="btn-nav" id="q2-next" onclick="nextQuestion(2)">下一題 →</button>
+                    <button class="btn-nav btn-finish" id="q2-finish" onclick="finishSession(2)" style="display:none;">完成測試 (交卷)</button>
+                </div>
+            </div>
+            <div id="q2-result-screen" style="display:none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const WEIGHT_KEY = "word_weights_final";
+    let wordWeights = {};
+    let allWords = [];       
+    let activePool = [];     
+    let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
+
+    window.addEventListener('DOMContentLoaded', async () => {
+        const filterArea = document.getElementById('lesson-filters');
+
+        // 1. 防護 LocalStorage 崩潰 (無痕模式常見)
+        try {
+            wordWeights = JSON.parse(localStorage.getItem(WEIGHT_KEY)) || {};
+        } catch(e) {
+            console.warn("無法使用 LocalStorage，使用暫存模式");
+            wordWeights = {};
+        }
+
+        // 2. 防護 PapaParse 未成功載入
+        if (typeof Papa === 'undefined') {
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:18px;">❌ 嚴重錯誤：無法載入解析套件，請檢查網路連線或關閉廣告阻擋器。</span>`;
+            return;
+        }
+
+        // 3. 親自去抓檔，強迫不使用快取，並精準捕捉 404
+        try {
+            const response = await fetch('words.csv', { cache: 'no-cache' });
+            
+            if (!response.ok) {
+                throw new Error(`找不到 words.csv 檔案 (伺服器回傳狀態碼: ${response.status})。請確認檔名全小寫且已上傳 GitHub 成功。`);
+            }
+            
+            const textData = await response.text();
+            
+            // 解析文字
+            Papa.parse(textData.trim(), {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(results) {
+                    processParsedData(results.data, filterArea);
+                },
+                error: function(err) {
+                    throw new Error("CSV 解析失敗: " + err.message);
+                }
+            });
+
+        } catch (error) {
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 讀取失敗: ${error.message}</span>`;
+        }
+    });
+
+    function processParsedData(data, filterArea) {
+        allWords = [];
+        data.forEach(row => {
+            if (typeof row !== 'object' || row === null) return;
+            
+            const keys = Object.keys(row);
+            // 採用更寬鬆的 includes 搜尋，防範 Excel 產生看不見的 BOM 或空白字元
+            const keyLesson = keys.find(k => k.toLowerCase().includes('lesson'));
+            const keyTitle = keys.find(k => k.toLowerCase().includes('title'));
+            const keyWord = keys.find(k => k.toLowerCase().includes('word'));
+            const keyTrans = keys.find(k => k.toLowerCase().includes('translation') || k.toLowerCase().includes('trans'));
+
+            if (keyWord && keyTrans && row[keyWord] && row[keyTrans]) {
+                allWords.push({
+                    lesson: keyLesson && row[keyLesson] ? String(row[keyLesson]).trim() : '1',
+                    title: keyTitle && row[keyTitle] ? String(row[keyTitle]).trim() : '未分類',
+                    word: String(row[keyWord]).trim(),
+                    translation: String(row[keyTrans]).trim(),
+                    id: `${row[keyLesson]}_${row[keyWord]}`
+                });
+            }
+        });
+
+        if (allWords.length === 0) {
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 成功下載檔案，但找不到單字！請確認您的 CSV 第一行標題是否確實包含「word」與「translation」。</span>`;
+            return;
+        }
+
+        initWeights(); 
+        renderFilters(filterArea); 
+        updateActivePool();
+
+        // 啟用測試按鈕
+        document.getElementById('q1-start-btn').innerText = "開始 10 題測試";
+        document.getElementById('q1-start-btn').disabled = false;
+        document.getElementById('q2-start-btn').innerText = "開始 10 題測試";
+        document.getElementById('q2-start-btn').disabled = false;
+    }
+
+    function initWeights() {
+        allWords.forEach(w => { if (wordWeights[w.id] === undefined) wordWeights[w.id] = 10; });
+        saveWeights();
+    }
+    
+    function saveWeights() { 
+        try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights)); } catch(e) {} // 靜默略過，不讓網頁當機
+    }
+
+    function renderFilters(container) {
+        const lessons = [];
+        const seen = new Set();
+        allWords.forEach(w => {
+            const key = `${w.lesson}-${w.title}`;
+            if (!seen.has(key)) { seen.add(key); lessons.push({ id: w.lesson, title: w.title }); }
+        });
+        lessons.sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
+
+        container.innerHTML = '';
+        lessons.forEach((l, idx) => {
+            const label = document.createElement('label');
+            label.className = 'checkbox-label';
+            const checked = idx === 0 ? 'checked' : ''; 
+            label.innerHTML = `<input type="checkbox" value="${l.id}" ${checked} onchange="updateActivePool()"> L${l.id} (${l.title})`;
+            container.appendChild(label);
+        });
+    }
+
+    function updateActivePool() {
+        const checkedLessons = Array.from(document.querySelectorAll('#lesson-filters input:checked')).map(el => el.value);
+        activePool = allWords.filter(w => checkedLessons.includes(w.lesson));
+        renderWordList();
+        document.getElementById('q1-start-screen').style.display = 'block'; document.getElementById('q1-play-screen').style.display = 'none'; document.getElementById('q1-result-screen').style.display = 'none';
+        document.getElementById('q2-start-screen').style.display = 'block'; document.getElementById('q2-play-screen').style.display = 'none'; document.getElementById('q2-result-screen').style.display = 'none';
+    }
+
+    function renderWordList() {
+        const tbody = document.getElementById('word-list-body');
+        if (activePool.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>'; return;
+        }
+        tbody.innerHTML = activePool.map(w => `
+            <tr>
+                <td>L${w.lesson} - ${w.title}</td>
+                <td style="font-weight:bold; font-size:18px;">${w.word}</td>
+                <td><button class="btn-audio" onclick="speak('${w.word}')">🔊</button></td>
+                <td>${w.translation}</td>
+                <td><span style="color:#e71d36; font-weight:bold;">${wordWeights[w.id]}</span> 籤</td>
+            </tr>
+        `).join('');
+    }
+
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US'; utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    function getRandomWordByWeight() {
+        if (activePool.length === 0) return null;
+        let totalWeight = 0; activePool.forEach(w => { totalWeight += (wordWeights[w.id] || 10); });
+        let randomNum = Math.random() * totalWeight;
+        for (let i = 0; i < activePool.length; i++) {
+            const w = activePool[i]; const weight = wordWeights[w.id] || 10;
+            if (randomNum < weight) return w; randomNum -= weight;
+        }
+        return activePool[activePool.length - 1];
+    }
+
+    function startSession(mode) {
+        if (activePool.length === 0) { alert("請先在上方勾選要測試的單元範圍！"); return; }
+        currentSession.mode = mode; currentSession.currentIndex = 0; currentSession.questions = [];
+        currentSession.userAnswers = new Array(10).fill(""); currentSession.optionsData = [];
+
+        for (let i = 0; i < 10; i++) {
+            let picked = getRandomWordByWeight(); currentSession.questions.push(picked);
+            if (mode === 2) {
+                let opts = [picked.translation];
+                let wrongPool = allWords.filter(w => w.translation !== picked.translation).map(w => w.translation);
+                wrongPool = [...new Set(wrongPool)].sort(() => Math.random() - 0.5);
+                for(let j=0; j<3; j++) { if(wrongPool[j]) opts.push(wrongPool[j]); }
+                opts.sort(() => Math.random() - 0.5); currentSession.optionsData.push(opts);
+            }
+        }
+        document.getElementById(`q${mode}-start-screen`).style.display = 'none'; document.getElementById(`q${mode}-result-screen`).style.display = 'none'; document.getElementById(`q${mode}-play-screen`).style.display = 'block'; showQuestion(mode);
+    }
+
+    function showQuestion(mode) {
+        const idx = currentSession.currentIndex; const wordObj = currentSession.questions[idx];
+        document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} / 10 題`;
+        document.getElementById(`q${mode}-stats`).innerText = `目前此字權重：${wordWeights[wordObj.id]} 籤`;
+        document.getElementById(`q${mode}-prev`).disabled = (idx === 0);
+        
+        const finishBtn = document.getElementById(`q${mode}-finish`);
+        if (idx === 9) {
+            document.getElementById(`q${mode}-next`).style.display = 'none'; if(finishBtn) finishBtn.style.display = 'inline-block';
+        } else {
+            document.getElementById(`q${mode}-next`).style.display = 'inline-block'; if(finishBtn) finishBtn.style.display = 'none';
+        }
+
+        if (mode === 1) {
+            document.getElementById('q1-question').innerText = `請寫出英文：「 ${wordObj.translation} 」`;
+            const inputField = document.getElementById('q1-input'); inputField.value = currentSession.userAnswers[idx]; 
+            document.getElementById('q1-feedback').innerText = currentSession.userAnswers[idx] ? "💡 本題已暫存答案" : "";
+            inputField.focus();
+        } else {
+            document.getElementById('q2-question').innerText = wordObj.word;
+            const options = currentSession.optionsData[idx]; const savedAns = currentSession.userAnswers[idx];
+            const optionsContainer = document.getElementById('q2-options');
+            optionsContainer.innerHTML = options.map(opt => {
+                let style = savedAns === opt ? "background-color: var(--primary); color: white;" : "";
+                return `<button class="option-btn" style="${style}" onclick="saveAnswer2('${opt}', this)">${opt}</button>`;
+            }).join('');
+            document.getElementById('q2-feedback').innerText = savedAns ? "💡 本題已選擇答案" : "";
+        }
+    }
+
+    function saveAnswer1() {
+        const idx = currentSession.currentIndex; currentSession.userAnswers[idx] = document.getElementById('q1-input').value.trim();
+        document.getElementById('q1-feedback').innerText = "已暫存答案！";
+        if (idx < 9) setTimeout(() => { nextQuestion(1); }, 400);
+    }
+
+    function saveAnswer2(selectedOpt, btnElement) {
+        const idx = currentSession.currentIndex; currentSession.userAnswers[idx] = selectedOpt;
+        document.querySelectorAll('#q2-options .option-btn').forEach(btn => btn.setAttribute('style', ''));
+        btnElement.style.backgroundColor = "var(--primary)"; btnElement.style.color = "white";
+        document.getElementById('q2-feedback').innerText = "已選取！";
+        if (idx < 9) setTimeout(() => { nextQuestion(2); }, 400);
+    }
+
+    function nextQuestion(mode) {
+        if (currentSession.currentIndex < 9) {
+            if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
+            currentSession.currentIndex++; showQuestion(mode);
+        }
+    }
+    function prevQuestion(mode) {
+        if (currentSession.currentIndex > 0) {
+            if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
+            currentSession.currentIndex--; showQuestion(mode);
+        }
+    }
+
+    function finishSession(mode) {
+        if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
+        let correctCount = 0;
+        let reportHtml = `<h2>🎯 測試結果報告</h2><p>您在 10 題中答對了 <strong style="color:var(--success); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
+
+        currentSession.questions.forEach((wordObj, i) => {
+            const userAns = currentSession.userAnswers[i].toLowerCase();
+            let isCorrect = mode === 1 ? (userAns === wordObj.word.toLowerCase()) : (currentSession.userAnswers[i] === wordObj.translation);
+            const currentWeight = wordWeights[wordObj.id] || 10;
+            
+            if (isCorrect) {
+                correctCount++; wordWeights[wordObj.id] = Math.max(1, currentWeight - 2);
+                reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`;
+            } else {
+                wordWeights[wordObj.id] = Math.min(40, currentWeight + 5);
+                const correctTxt = mode === 1 ? wordObj.word : wordObj.translation;
+                reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">您的答案: ${currentSession.userAnswers[i]||'空'} → 正確: ${correctTxt}</span></div>`;
+            }
+        });
+
+        reportHtml += `</div><br><button class="btn-submit" onclick="restartMode(${mode})">再測一組 10 題</button>`;
+        saveWeights(); renderWordList();
+        document.getElementById(`q${mode}-play-screen`).style.display = 'none';
+        const resScr = document.getElementById(`q${mode}-result-screen`);
+        resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
+    }
+
+    function restartMode(mode) { document.getElementById(`q${mode}-result-screen`).style.display = 'none'; document.getElementById(`q${mode}-start-screen`).style.display = 'block'; startSession(mode); }
+    function switchTab(tabId) { document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active')); document.getElementById('btn-' + tabId).classList.add('active'); document.getElementById(tabId).classList.add('active'); }
+</script>
+</body>
+</html>
