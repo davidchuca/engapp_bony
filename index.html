@@ -6,9 +6,9 @@
     <title>英文單字智慧測驗系統 - 擴充版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; }
+        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--background); color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
         h1, h2 { text-align: center; color: #2c3e50; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s; }
@@ -46,13 +46,16 @@
         .history-header { font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
         .history-detail { display: inline-block; width: 48%; margin-bottom: 5px; font-size: 14px; }
         
-        /* 【功能 2 新增】：單字專屬紀錄彈出視窗 (Modal) 樣式 */
+        /* Modal 樣式 */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; }
         .close-btn:hover { color: #e71d36; }
         .word-history-list { list-style: none; padding: 0; margin: 15px 0; }
         .word-history-item { padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
+        
+        /* 【功能 3 新增】：熟練度徽章樣式 */
+        .eval-badge { padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: white; display: inline-block; text-align: center; min-width: 50px; }
     </style>
 </head>
 <body>
@@ -80,13 +83,14 @@
                 <tr>
                     <th>課別/單元</th>
                     <th>英文單字</th>
-                    <th>發音 (正常/慢速)</th> 
+                    <th>發音</th> 
                     <th>中文解釋</th>
-                    <th>目前錯題權重</th>
-                    <th>個別紀錄</th> </tr>
+                    <th>錯題權重</th>
+                    <th>熟練度</th> <th>個別紀錄</th>
+                </tr>
             </thead>
             <tbody id="word-list-body">
-                <tr><td colspan="6" style="text-align:center;">請先勾選上方單元範圍</td></tr>
+                <tr><td colspan="7" style="text-align:center;">請先勾選上方單元範圍</td></tr>
             </tbody>
         </table>
     </div>
@@ -154,9 +158,10 @@
         <h2 id="modal-word-title" style="margin-top: 0; color: var(--primary);">單字紀錄</h2>
         <div id="modal-word-translation" style="color: #64748b; font-size: 16px; margin-bottom: 10px; text-align: center;"></div>
         
+        <div id="modal-word-evaluation" style="text-align: center; margin-bottom: 15px; padding: 10px; background: #f1f5f9; border-radius: 8px;"></div>
+        
         <div style="max-height: 300px; overflow-y: auto;">
-            <ul id="modal-word-list" class="word-history-list">
-                </ul>
+            <ul id="modal-word-list" class="word-history-list"></ul>
         </div>
         
         <button id="modal-word-reset-btn" class="btn-submit" style="background: var(--danger); width: 100%; margin-top: 15px;">🗑️ 清空此單字的測試紀錄</button>
@@ -166,11 +171,11 @@
 <script>
     const WEIGHT_KEY = "word_weights_final";
     const HISTORY_KEY = "quiz1_history"; 
-    const WORD_SPECIFIC_HISTORY_KEY = "word_specific_history"; // 【功能 2 新增】：儲存個別單字紀錄的 Key
+    const WORD_SPECIFIC_HISTORY_KEY = "word_specific_history"; 
 
     let wordWeights = {};
     let quiz1History = []; 
-    let wordSpecificHistory = {}; // 【功能 2 新增】：用來存放每個單字陣列的物件
+    let wordSpecificHistory = {}; 
 
     let allWords = [];       
     let activePool = [];     
@@ -182,17 +187,14 @@
         try {
             wordWeights = JSON.parse(localStorage.getItem(WEIGHT_KEY)) || {};
             quiz1History = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
-            // 【功能 2 新增】：讀取個別單字紀錄
             wordSpecificHistory = JSON.parse(localStorage.getItem(WORD_SPECIFIC_HISTORY_KEY)) || {};
         } catch(e) {
-            console.warn("無法使用 LocalStorage，使用暫存模式");
-            wordWeights = {};
-            quiz1History = [];
-            wordSpecificHistory = {};
+            console.warn("無法使用 LocalStorage");
+            wordWeights = {}; quiz1History = []; wordSpecificHistory = {};
         }
 
         if (typeof Papa === 'undefined') {
-            filterArea.innerHTML = `<span style="color:var(--danger); font-size:18px;">❌ 嚴重錯誤：無法載入解析套件，請檢查網路連線或關閉廣告阻擋器。</span>`;
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:18px;">❌ 嚴重錯誤：無法載入解析套件。</span>`;
             return;
         }
 
@@ -202,10 +204,9 @@
             const textData = await response.text();
             
             Papa.parse(textData.trim(), {
-                header: true,
-                skipEmptyLines: true,
+                header: true, skipEmptyLines: true,
                 complete: function(results) { processParsedData(results.data, filterArea); },
-                error: function(err) { throw new Error("CSV 解析失敗: " + err.message); }
+                error: function(err) { throw new Error("CSV 解析失敗"); }
             });
         } catch (error) {
             filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 讀取失敗: ${error.message}</span>`;
@@ -234,16 +235,12 @@
         });
 
         if (allWords.length === 0) {
-            filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 找不到單字！</span>`;
-            return;
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 找不到單字！</span>`; return;
         }
 
         initWeights(); renderFilters(filterArea); updateActivePool();
-
-        document.getElementById('q1-start-btn').innerText = "開始 10 題測試";
-        document.getElementById('q1-start-btn').disabled = false;
-        document.getElementById('q2-start-btn').innerText = "開始 10 題測試";
-        document.getElementById('q2-start-btn').disabled = false;
+        document.getElementById('q1-start-btn').innerText = "開始 10 題測試"; document.getElementById('q1-start-btn').disabled = false;
+        document.getElementById('q2-start-btn').innerText = "開始 10 題測試"; document.getElementById('q2-start-btn').disabled = false;
     }
 
     function initWeights() {
@@ -251,14 +248,32 @@
         saveWeights();
     }
     
-    function saveWeights() { 
-        try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights)); } catch(e) {} 
-    }
+    function saveWeights() { try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights)); } catch(e) {} }
+    function saveWordSpecificHistory() { try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {} }
 
-    // 儲存單字歷史的方法
-    function saveWordSpecificHistory() {
-        try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {}
+    // ========== 【功能 3 新增】：計算單字熟練度核心邏輯 ==========
+    function getWordEvaluation(wordId) {
+        const records = wordSpecificHistory[wordId] || [];
+        const total = records.length;
+        
+        // 測試次數小於 3 次
+        if (total < 3) {
+            return { text: "待評比", bgColor: "#94a3b8", accuracy: null, total: total };
+        }
+        
+        // 測試次數大於等於 3 次，計算正確率
+        const correctCount = records.filter(r => r.isCorrect).length;
+        const accuracy = Math.round((correctCount / total) * 100);
+        
+        if (accuracy <= 50) {
+            return { text: "不大熟", bgColor: "var(--danger)", accuracy: accuracy, total: total };
+        } else if (accuracy < 100) {
+            return { text: "熟", bgColor: "var(--warning)", accuracy: accuracy, total: total };
+        } else {
+            return { text: "精通", bgColor: "var(--success)", accuracy: accuracy, total: total };
+        }
     }
+    // ==========================================================
 
     function renderFilters(container) {
         const lessons = [];
@@ -271,8 +286,7 @@
 
         container.innerHTML = '';
         lessons.forEach((l, idx) => {
-            const label = document.createElement('label');
-            label.className = 'checkbox-label';
+            const label = document.createElement('label'); label.className = 'checkbox-label';
             const checked = idx === 0 ? 'checked' : ''; 
             label.innerHTML = `<input type="checkbox" value="${l.id}" ${checked} onchange="updateActivePool()"> L${l.id} (${l.title})`;
             container.appendChild(label);
@@ -290,9 +304,14 @@
     function renderWordList() {
         const tbody = document.getElementById('word-list-body');
         if (activePool.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>'; return;
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>'; return;
         }
-        tbody.innerHTML = activePool.map(w => `
+        tbody.innerHTML = activePool.map(w => {
+            // 【功能 3 新增】：取得評估結果並渲染徽章
+            const evalObj = getWordEvaluation(w.id);
+            const badgeHtml = `<span class="eval-badge" style="background-color: ${evalObj.bgColor};">${evalObj.text}</span>`;
+            
+            return `
             <tr>
                 <td>L${w.lesson} - ${w.title}</td>
                 <td style="font-weight:bold; font-size:18px;">${w.word}</td>
@@ -302,20 +321,30 @@
                 </td>
                 <td>${w.translation}</td>
                 <td><span style="color:#e71d36; font-weight:bold;">${wordWeights[w.id]}</span> 籤</td>
-                <td>
+                <td>${badgeHtml}</td> <td>
                     <button class="btn-nav" style="padding: 6px 12px; font-size: 14px; background: #8b5cf6;" onclick="openWordHistoryModal('${w.id}')">📊 查看</button>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
     }
 
-    // ========== 【功能 2 新增】：單字專屬歷史紀錄 Modal 邏輯 ==========
     function openWordHistoryModal(wordId) {
         const wordObj = allWords.find(w => w.id === wordId);
         if (!wordObj) return;
 
         document.getElementById('modal-word-title').innerText = `單字 [ ${wordObj.word} ]`;
         document.getElementById('modal-word-translation').innerText = `中文解釋：${wordObj.translation}`;
+        
+        // 【功能 3 新增】：在 Modal 顯示詳細熟練度狀態
+        const evalObj = getWordEvaluation(wordId);
+        let evalHtml = `目前狀態：<span class="eval-badge" style="background-color: ${evalObj.bgColor}; margin-left: 5px;">${evalObj.text}</span>`;
+        if (evalObj.accuracy !== null) {
+            evalHtml += `<br><span style="font-size: 14px; color: #64748b;">總測驗次數：${evalObj.total} 次 / 正確率：${evalObj.accuracy}%</span>`;
+        } else {
+            evalHtml += `<br><span style="font-size: 14px; color: #64748b;">總測驗次數：${evalObj.total} 次 (需滿 3 次才能評比)</span>`;
+        }
+        document.getElementById('modal-word-evaluation').innerHTML = evalHtml;
         
         const historyList = document.getElementById('modal-word-list');
         const records = wordSpecificHistory[wordId] || [];
@@ -324,7 +353,6 @@
             historyList.innerHTML = '<li style="text-align:center; color:#94a3b8; padding: 20px 0;">尚無任何中翻英測試紀錄。</li>';
         } else {
             let html = '';
-            // 最新的紀錄排在最上面
             records.slice().reverse().forEach(record => {
                 const icon = record.isCorrect ? '⭕' : '❌';
                 const color = record.isCorrect ? 'var(--success)' : 'var(--danger)';
@@ -339,22 +367,19 @@
             historyList.innerHTML = html;
         }
 
-        // 綁定清除按鈕事件
         document.getElementById('modal-word-reset-btn').onclick = function() {
             if (confirm(`確定要清空 [ ${wordObj.word} ] 的專屬測試紀錄嗎？`)) {
                 delete wordSpecificHistory[wordId];
                 saveWordSpecificHistory();
                 openWordHistoryModal(wordId); // 重新渲染 Modal
+                renderWordList(); // 同步刷新後方表格的熟練度徽章
             }
         };
 
         document.getElementById('word-history-modal').style.display = 'flex';
     }
 
-    function closeWordHistoryModal() {
-        document.getElementById('word-history-modal').style.display = 'none';
-    }
-    // ================================================================
+    function closeWordHistoryModal() { document.getElementById('word-history-modal').style.display = 'none'; }
 
     function speak(text, rate = 0.9) {
         if ('speechSynthesis' in window) {
@@ -457,7 +482,7 @@
         let reportHtml = `<h2>🎯 測試結果報告</h2><p>您在 10 題中答對了 <strong style="color:var(--success); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
         let sessionRecord = null;
-        const testDateString = new Date().toLocaleString('zh-TW'); // 取得當下時間
+        const testDateString = new Date().toLocaleString('zh-TW'); 
 
         if (mode === 1) {
             sessionRecord = { date: testDateString, details: [] };
@@ -469,20 +494,14 @@
             const currentWeight = wordWeights[wordObj.id] || 10;
             
             if (mode === 1) {
-                // 1. 寫入全卷歷史
                 sessionRecord.details.push({
                     word: wordObj.word, translation: wordObj.translation,
                     userAnswer: currentSession.userAnswers[i] || '', isCorrect: isCorrect
                 });
 
-                // 2. 【功能 2 新增】：將這題結果單獨寫入該單字的專屬歷史中
-                if (!wordSpecificHistory[wordObj.id]) {
-                    wordSpecificHistory[wordObj.id] = [];
-                }
+                if (!wordSpecificHistory[wordObj.id]) wordSpecificHistory[wordObj.id] = [];
                 wordSpecificHistory[wordObj.id].push({
-                    date: testDateString,
-                    isCorrect: isCorrect,
-                    userAnswer: currentSession.userAnswers[i] || ''
+                    date: testDateString, isCorrect: isCorrect, userAnswer: currentSession.userAnswers[i] || ''
                 });
             }
 
@@ -502,16 +521,13 @@
             if (quiz1History.length > 100) quiz1History.length = 100;
             try { localStorage.setItem(HISTORY_KEY, JSON.stringify(quiz1History)); } catch(e) {}
             
-            // 【功能 2 新增】：儲存更新後的個別單字歷史
             saveWordSpecificHistory();
 
-            if (document.getElementById('q1-history-screen').style.display !== 'none') {
-                renderHistory1();
-            }
+            if (document.getElementById('q1-history-screen').style.display !== 'none') renderHistory1();
         }
 
         reportHtml += `</div><br><button class="btn-submit" onclick="restartMode(${mode})">再測一組 10 題</button>`;
-        saveWeights(); renderWordList();
+        saveWeights(); renderWordList(); // 同步刷新表格內的熟練度徽章
         document.getElementById(`q${mode}-play-screen`).style.display = 'none';
         const resScr = document.getElementById(`q${mode}-result-screen`);
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
@@ -519,29 +535,19 @@
 
     function toggleHistory1() {
         const screen = document.getElementById('q1-history-screen');
-        if (screen.style.display === 'none') {
-            renderHistory1(); screen.style.display = 'block';
-        } else { screen.style.display = 'none'; }
+        if (screen.style.display === 'none') { renderHistory1(); screen.style.display = 'block'; } else { screen.style.display = 'none'; }
     }
 
     function renderHistory1() {
         const container = document.getElementById('q1-history-content');
-        if (quiz1History.length === 0) {
-            container.innerHTML = '<p style="color: #64748b;">目前沒有任何中翻英的測試紀錄。</p>'; return;
-        }
+        if (quiz1History.length === 0) { container.innerHTML = '<p style="color: #64748b;">目前沒有任何中翻英的測試紀錄。</p>'; return; }
         let html = '';
         quiz1History.forEach((session, index) => {
-            html += `<div class="history-session">
-                        <div class="history-header">
-                            🕒 測驗時間: ${session.date} 
-                            <span style="float: right;">答對: <strong style="color:var(--success)">${session.score}</strong> / 10</span>
-                        </div><div>`;
+            html += `<div class="history-session"><div class="history-header">🕒 測驗時間: ${session.date} <span style="float: right;">答對: <strong style="color:var(--success)">${session.score}</strong> / 10</span></div><div>`;
             session.details.forEach(detail => {
                 const icon = detail.isCorrect ? '⭕' : '❌';
                 const color = detail.isCorrect ? 'var(--success)' : 'var(--danger)';
-                html += `<div class="history-detail">${icon} ${detail.translation} (${detail.word})<br>
-                            <span style="color:${color}; font-size:12px; margin-left: 20px;">您的作答: ${detail.userAnswer || '(未填寫)'}</span>
-                         </div>`;
+                html += `<div class="history-detail">${icon} ${detail.translation} (${detail.word})<br><span style="color:${color}; font-size:12px; margin-left: 20px;">您的作答: ${detail.userAnswer || '(未填寫)'}</span></div>`;
             });
             html += `</div></div>`;
         });
