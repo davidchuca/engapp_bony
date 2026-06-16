@@ -8,7 +8,7 @@
     <style>
         :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--background); color: #333; margin: 0; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
         h1, h2 { text-align: center; color: #2c3e50; }
         .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s; }
@@ -42,11 +42,17 @@
         .stats-info { font-size: 13px; color: #94a3b8; margin-top: 5px; }
         .report-box { background: #f1f5f9; padding: 20px; border-radius: 8px; margin-top: 20px; text-align: left; }
         .report-item { padding: 8px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; }
-        
-        /* 歷史紀錄區塊的樣式 */
         .history-session { background: #fff; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
         .history-header { font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
         .history-detail { display: inline-block; width: 48%; margin-bottom: 5px; font-size: 14px; }
+        
+        /* 【功能 2 新增】：單字專屬紀錄彈出視窗 (Modal) 樣式 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; }
+        .close-btn:hover { color: #e71d36; }
+        .word-history-list { list-style: none; padding: 0; margin: 15px 0; }
+        .word-history-item { padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -77,10 +83,10 @@
                     <th>發音 (正常/慢速)</th> 
                     <th>中文解釋</th>
                     <th>目前錯題權重</th>
-                </tr>
+                    <th>個別紀錄</th> </tr>
             </thead>
             <tbody id="word-list-body">
-                <tr><td colspan="5" style="text-align:center;">請先勾選上方單元範圍</td></tr>
+                <tr><td colspan="6" style="text-align:center;">請先勾選上方單元範圍</td></tr>
             </tbody>
         </table>
     </div>
@@ -89,8 +95,8 @@
         <h2>模式 1：中翻英填空 (10題挑戰賽)</h2>
         
         <div style="text-align: right; margin-bottom: 15px;">
-            <button class="btn-nav" onclick="toggleHistory1()" style="background: #3b82f6;">📊 觀看測試紀錄</button>
-            <button class="btn-nav" onclick="clearHistory1()" style="background: #ef4444;">🗑️ 重置紀錄</button>
+            <button class="btn-nav" onclick="toggleHistory1()" style="background: #3b82f6;">📊 觀看全卷測試紀錄</button>
+            <button class="btn-nav" onclick="clearHistory1()" style="background: #ef4444;">🗑️ 重置全卷紀錄</button>
         </div>
         
         <div id="q1-history-screen" style="display:none; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; text-align: left;">
@@ -142,12 +148,30 @@
     </div>
 </div>
 
+<div id="word-history-modal" class="modal-overlay">
+    <div class="modal-content">
+        <button class="close-btn" onclick="closeWordHistoryModal()">✖</button>
+        <h2 id="modal-word-title" style="margin-top: 0; color: var(--primary);">單字紀錄</h2>
+        <div id="modal-word-translation" style="color: #64748b; font-size: 16px; margin-bottom: 10px; text-align: center;"></div>
+        
+        <div style="max-height: 300px; overflow-y: auto;">
+            <ul id="modal-word-list" class="word-history-list">
+                </ul>
+        </div>
+        
+        <button id="modal-word-reset-btn" class="btn-submit" style="background: var(--danger); width: 100%; margin-top: 15px;">🗑️ 清空此單字的測試紀錄</button>
+    </div>
+</div>
+
 <script>
     const WEIGHT_KEY = "word_weights_final";
-    const HISTORY_KEY = "quiz1_history"; // 【功能 1 新增】：儲存中翻英紀錄的 Key
+    const HISTORY_KEY = "quiz1_history"; 
+    const WORD_SPECIFIC_HISTORY_KEY = "word_specific_history"; // 【功能 2 新增】：儲存個別單字紀錄的 Key
 
     let wordWeights = {};
-    let quiz1History = []; // 【功能 1 新增】：儲存中翻英紀錄的陣列
+    let quiz1History = []; 
+    let wordSpecificHistory = {}; // 【功能 2 新增】：用來存放每個單字陣列的物件
+
     let allWords = [];       
     let activePool = [];     
     let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
@@ -157,12 +181,14 @@
 
         try {
             wordWeights = JSON.parse(localStorage.getItem(WEIGHT_KEY)) || {};
-            // 【功能 1 新增】：讀取歷史紀錄
             quiz1History = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+            // 【功能 2 新增】：讀取個別單字紀錄
+            wordSpecificHistory = JSON.parse(localStorage.getItem(WORD_SPECIFIC_HISTORY_KEY)) || {};
         } catch(e) {
             console.warn("無法使用 LocalStorage，使用暫存模式");
             wordWeights = {};
             quiz1History = [];
+            wordSpecificHistory = {};
         }
 
         if (typeof Papa === 'undefined') {
@@ -172,24 +198,15 @@
 
         try {
             const response = await fetch('words.csv', { cache: 'no-cache' });
-            
-            if (!response.ok) {
-                throw new Error(`找不到 words.csv 檔案 (伺服器回傳狀態碼: ${response.status})。請確認檔名全小寫且已上傳 GitHub 成功。`);
-            }
-            
+            if (!response.ok) throw new Error(`找不到 words.csv`);
             const textData = await response.text();
             
             Papa.parse(textData.trim(), {
                 header: true,
                 skipEmptyLines: true,
-                complete: function(results) {
-                    processParsedData(results.data, filterArea);
-                },
-                error: function(err) {
-                    throw new Error("CSV 解析失敗: " + err.message);
-                }
+                complete: function(results) { processParsedData(results.data, filterArea); },
+                error: function(err) { throw new Error("CSV 解析失敗: " + err.message); }
             });
-
         } catch (error) {
             filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 讀取失敗: ${error.message}</span>`;
         }
@@ -199,7 +216,6 @@
         allWords = [];
         data.forEach(row => {
             if (typeof row !== 'object' || row === null) return;
-            
             const keys = Object.keys(row);
             const keyLesson = keys.find(k => k.toLowerCase().includes('lesson'));
             const keyTitle = keys.find(k => k.toLowerCase().includes('title'));
@@ -218,13 +234,11 @@
         });
 
         if (allWords.length === 0) {
-            filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 成功下載檔案，但找不到單字！請確認您的 CSV 第一行標題是否確實包含「word」與「translation」。</span>`;
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 找不到單字！</span>`;
             return;
         }
 
-        initWeights(); 
-        renderFilters(filterArea); 
-        updateActivePool();
+        initWeights(); renderFilters(filterArea); updateActivePool();
 
         document.getElementById('q1-start-btn').innerText = "開始 10 題測試";
         document.getElementById('q1-start-btn').disabled = false;
@@ -239,6 +253,11 @@
     
     function saveWeights() { 
         try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights)); } catch(e) {} 
+    }
+
+    // 儲存單字歷史的方法
+    function saveWordSpecificHistory() {
+        try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {}
     }
 
     function renderFilters(container) {
@@ -271,7 +290,7 @@
     function renderWordList() {
         const tbody = document.getElementById('word-list-body');
         if (activePool.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>'; return;
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:red;">請至少勾選一個單元範圍</td></tr>'; return;
         }
         tbody.innerHTML = activePool.map(w => `
             <tr>
@@ -283,16 +302,65 @@
                 </td>
                 <td>${w.translation}</td>
                 <td><span style="color:#e71d36; font-weight:bold;">${wordWeights[w.id]}</span> 籤</td>
+                <td>
+                    <button class="btn-nav" style="padding: 6px 12px; font-size: 14px; background: #8b5cf6;" onclick="openWordHistoryModal('${w.id}')">📊 查看</button>
+                </td>
             </tr>
         `).join('');
     }
+
+    // ========== 【功能 2 新增】：單字專屬歷史紀錄 Modal 邏輯 ==========
+    function openWordHistoryModal(wordId) {
+        const wordObj = allWords.find(w => w.id === wordId);
+        if (!wordObj) return;
+
+        document.getElementById('modal-word-title').innerText = `單字 [ ${wordObj.word} ]`;
+        document.getElementById('modal-word-translation').innerText = `中文解釋：${wordObj.translation}`;
+        
+        const historyList = document.getElementById('modal-word-list');
+        const records = wordSpecificHistory[wordId] || [];
+
+        if (records.length === 0) {
+            historyList.innerHTML = '<li style="text-align:center; color:#94a3b8; padding: 20px 0;">尚無任何中翻英測試紀錄。</li>';
+        } else {
+            let html = '';
+            // 最新的紀錄排在最上面
+            records.slice().reverse().forEach(record => {
+                const icon = record.isCorrect ? '⭕' : '❌';
+                const color = record.isCorrect ? 'var(--success)' : 'var(--danger)';
+                html += `
+                    <li class="word-history-item">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                            <span>${icon} 測試時間：${record.date}</span>
+                        </div>
+                        ${!record.isCorrect ? `<div style="color:${color}; font-size:13px; margin-left:24px;">您的作答: <strong>${record.userAnswer || '(未填寫)'}</strong></div>` : ''}
+                    </li>`;
+            });
+            historyList.innerHTML = html;
+        }
+
+        // 綁定清除按鈕事件
+        document.getElementById('modal-word-reset-btn').onclick = function() {
+            if (confirm(`確定要清空 [ ${wordObj.word} ] 的專屬測試紀錄嗎？`)) {
+                delete wordSpecificHistory[wordId];
+                saveWordSpecificHistory();
+                openWordHistoryModal(wordId); // 重新渲染 Modal
+            }
+        };
+
+        document.getElementById('word-history-modal').style.display = 'flex';
+    }
+
+    function closeWordHistoryModal() {
+        document.getElementById('word-history-modal').style.display = 'none';
+    }
+    // ================================================================
 
     function speak(text, rate = 0.9) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US'; 
-            utterance.rate = rate; 
+            utterance.lang = 'en-US'; utterance.rate = rate; 
             window.speechSynthesis.speak(utterance);
         }
     }
@@ -309,7 +377,7 @@
     }
 
     function startSession(mode) {
-        if (activePool.length === 0) { alert("請先在上方勾選要測試的單元範圍！"); return; }
+        if (activePool.length === 0) return;
         currentSession.mode = mode; currentSession.currentIndex = 0; currentSession.questions = [];
         currentSession.userAnswers = new Array(10).fill(""); currentSession.optionsData = [];
 
@@ -388,13 +456,11 @@
         let correctCount = 0;
         let reportHtml = `<h2>🎯 測試結果報告</h2><p>您在 10 題中答對了 <strong style="color:var(--success); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
-        // 【功能 1 新增】：建立本次測試的紀錄物件
         let sessionRecord = null;
+        const testDateString = new Date().toLocaleString('zh-TW'); // 取得當下時間
+
         if (mode === 1) {
-            sessionRecord = {
-                date: new Date().toLocaleString('zh-TW'),
-                details: []
-            };
+            sessionRecord = { date: testDateString, details: [] };
         }
 
         currentSession.questions.forEach((wordObj, i) => {
@@ -402,13 +468,21 @@
             let isCorrect = mode === 1 ? (userAns === wordObj.word.toLowerCase()) : (currentSession.userAnswers[i] === wordObj.translation);
             const currentWeight = wordWeights[wordObj.id] || 10;
             
-            // 【功能 1 新增】：紀錄此題的細節
             if (mode === 1) {
+                // 1. 寫入全卷歷史
                 sessionRecord.details.push({
-                    word: wordObj.word,
-                    translation: wordObj.translation,
-                    userAnswer: currentSession.userAnswers[i] || '',
-                    isCorrect: isCorrect
+                    word: wordObj.word, translation: wordObj.translation,
+                    userAnswer: currentSession.userAnswers[i] || '', isCorrect: isCorrect
+                });
+
+                // 2. 【功能 2 新增】：將這題結果單獨寫入該單字的專屬歷史中
+                if (!wordSpecificHistory[wordObj.id]) {
+                    wordSpecificHistory[wordObj.id] = [];
+                }
+                wordSpecificHistory[wordObj.id].push({
+                    date: testDateString,
+                    isCorrect: isCorrect,
+                    userAnswer: currentSession.userAnswers[i] || ''
                 });
             }
 
@@ -422,16 +496,15 @@
             }
         });
 
-        // 【功能 1 新增】：將總分寫入，並推送到歷史陣列中保存
         if (mode === 1) {
             sessionRecord.score = correctCount;
-            quiz1History.unshift(sessionRecord); // 新紀錄排在最前面
-            if (quiz1History.length > 100) {
-                quiz1History.length = 100; // 超過 100 筆時，捨棄最舊的
-            }
+            quiz1History.unshift(sessionRecord);
+            if (quiz1History.length > 100) quiz1History.length = 100;
             try { localStorage.setItem(HISTORY_KEY, JSON.stringify(quiz1History)); } catch(e) {}
             
-            // 如果畫面上的歷史紀錄面板剛好是開啟的，就順便刷新它
+            // 【功能 2 新增】：儲存更新後的個別單字歷史
+            saveWordSpecificHistory();
+
             if (document.getElementById('q1-history-screen').style.display !== 'none') {
                 renderHistory1();
             }
@@ -444,55 +517,44 @@
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
     }
 
-    // ========== 【功能 1 新增】：歷史紀錄 UI 相關函數 ==========
     function toggleHistory1() {
         const screen = document.getElementById('q1-history-screen');
         if (screen.style.display === 'none') {
-            renderHistory1();
-            screen.style.display = 'block';
-        } else {
-            screen.style.display = 'none';
-        }
+            renderHistory1(); screen.style.display = 'block';
+        } else { screen.style.display = 'none'; }
     }
 
     function renderHistory1() {
         const container = document.getElementById('q1-history-content');
         if (quiz1History.length === 0) {
-            container.innerHTML = '<p style="color: #64748b;">目前沒有任何中翻英的測試紀錄。</p>';
-            return;
+            container.innerHTML = '<p style="color: #64748b;">目前沒有任何中翻英的測試紀錄。</p>'; return;
         }
-
         let html = '';
         quiz1History.forEach((session, index) => {
             html += `<div class="history-session">
                         <div class="history-header">
                             🕒 測驗時間: ${session.date} 
                             <span style="float: right;">答對: <strong style="color:var(--success)">${session.score}</strong> / 10</span>
-                        </div>
-                        <div>`;
+                        </div><div>`;
             session.details.forEach(detail => {
                 const icon = detail.isCorrect ? '⭕' : '❌';
                 const color = detail.isCorrect ? 'var(--success)' : 'var(--danger)';
-                html += `<div class="history-detail">
-                            ${icon} ${detail.translation} (${detail.word})<br>
+                html += `<div class="history-detail">${icon} ${detail.translation} (${detail.word})<br>
                             <span style="color:${color}; font-size:12px; margin-left: 20px;">您的作答: ${detail.userAnswer || '(未填寫)'}</span>
                          </div>`;
             });
-            html += `   </div>
-                     </div>`;
+            html += `</div></div>`;
         });
         container.innerHTML = html;
     }
 
     function clearHistory1() {
-        if (confirm("⚠️ 警告：確定要刪除「所有中翻英」的歷史紀錄嗎？\n(這將無法復原，但不會影響單字權重)")) {
+        if (confirm("⚠️ 警告：確定要刪除「所有中翻英」的整張考卷紀錄嗎？\n(這不會影響單字權重與個別單字紀錄)")) {
             quiz1History = [];
             try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
-            renderHistory1();
-            alert("歷史紀錄已完全清空！");
+            renderHistory1(); alert("全卷歷史紀錄已完全清空！");
         }
     }
-    // =========================================================
 
     function restartMode(mode) { document.getElementById(`q${mode}-result-screen`).style.display = 'none'; document.getElementById(`q${mode}-start-screen`).style.display = 'block'; startSession(mode); }
     function switchTab(tabId) { document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active')); document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active')); document.getElementById('btn-' + tabId).classList.add('active'); document.getElementById(tabId).classList.add('active'); }
