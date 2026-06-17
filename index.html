@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字智慧測驗系統 - 擴充版</title>
+    <title>英文單字智慧測驗系統 - 終極版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; }
+        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; --graduated: #8b5cf6; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--background); color: #333; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
         h1, h2 { text-align: center; color: #2c3e50; }
@@ -45,14 +45,12 @@
         .history-session { background: #fff; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 15px; border-radius: 8px; }
         .history-header { font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
         .history-detail { display: inline-block; width: 48%; margin-bottom: 5px; font-size: 14px; }
-        
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; }
         .close-btn:hover { color: #e71d36; }
         .word-history-list { list-style: none; padding: 0; margin: 15px 0; }
         .word-history-item { padding: 10px 0; border-bottom: 1px solid #e2e8f0; font-size: 15px; }
-        
         .eval-badge { padding: 4px 8px; border-radius: 4px; font-size: 14px; font-weight: bold; color: white; display: inline-block; text-align: center; min-width: 50px; }
     </style>
 </head>
@@ -83,8 +81,7 @@
                     <th>英文單字</th>
                     <th>發音</th> 
                     <th>中文解釋</th>
-                    <th>熟練度</th>
-                    <th>個別紀錄</th>
+                    <th>熟練度</th> <th>個別紀錄</th>
                 </tr>
             </thead>
             <tbody id="word-list-body">
@@ -167,14 +164,11 @@
 </div>
 
 <script>
-    const WEIGHT_KEY = "word_weights_final";
     const HISTORY_KEY = "quiz1_history"; 
     const WORD_SPECIFIC_HISTORY_KEY = "word_specific_history"; 
 
-    let wordWeights = {};
     let quiz1History = []; 
     let wordSpecificHistory = {}; 
-
     let allWords = [];       
     let activePool = [];     
     let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
@@ -183,17 +177,15 @@
         const filterArea = document.getElementById('lesson-filters');
 
         try {
-            wordWeights = JSON.parse(localStorage.getItem(WEIGHT_KEY)) || {};
             quiz1History = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
             wordSpecificHistory = JSON.parse(localStorage.getItem(WORD_SPECIFIC_HISTORY_KEY)) || {};
         } catch(e) {
             console.warn("無法使用 LocalStorage");
-            wordWeights = {}; quiz1History = []; wordSpecificHistory = {};
+            quiz1History = []; wordSpecificHistory = {};
         }
 
         if (typeof Papa === 'undefined') {
-            filterArea.innerHTML = `<span style="color:var(--danger); font-size:18px;">❌ 嚴重錯誤：無法載入解析套件。</span>`;
-            return;
+            filterArea.innerHTML = `<span style="color:var(--danger); font-size:18px;">❌ 嚴重錯誤：無法載入解析套件。</span>`; return;
         }
 
         try {
@@ -236,36 +228,57 @@
             filterArea.innerHTML = `<span style="color:var(--danger); font-size:16px;">❌ 找不到單字！</span>`; return;
         }
 
-        initWeights(); renderFilters(filterArea); updateActivePool();
+        renderFilters(filterArea); updateActivePool();
         document.getElementById('q1-start-btn').innerText = "開始 10 題測試"; document.getElementById('q1-start-btn').disabled = false;
         document.getElementById('q2-start-btn').innerText = "開始 10 題測試"; document.getElementById('q2-start-btn').disabled = false;
     }
-
-    function initWeights() {
-        allWords.forEach(w => { if (wordWeights[w.id] === undefined) wordWeights[w.id] = 10; });
-        saveWeights();
-    }
     
-    function saveWeights() { try { localStorage.setItem(WEIGHT_KEY, JSON.stringify(wordWeights)); } catch(e) {} }
     function saveWordSpecificHistory() { try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {} }
 
+    // ========== 【功能 4 核心】：畢業判定與熟練度計算 ==========
     function getWordEvaluation(wordId) {
         const records = wordSpecificHistory[wordId] || [];
         const total = records.length;
         
-        if (total < 3) {
-            return { text: "待評比", bgColor: "#94a3b8", accuracy: null, total: total };
+        // 判斷是否畢業：總數 >= 5 且最後三次連續正確，且這三次在不同日期
+        let isGraduated = false;
+        if (total >= 5) {
+            let consecutiveCorrect = 0;
+            let correctDates = new Set();
+            
+            // 從最新一次紀錄往回找
+            for (let i = total - 1; i >= 0; i--) {
+                if (records[i].isCorrect) {
+                    consecutiveCorrect++;
+                    // 擷取日期字串（去除時間），利用正則切開空格或逗號
+                    correctDates.add(records[i].date.split(/[ ,]+/)[0]);
+                } else {
+                    break; // 只要錯一次，連續正確的氣勢就斷了
+                }
+            }
+            // 滿足條件即畢業
+            if (consecutiveCorrect >= 3 && correctDates.size >= 3) {
+                isGraduated = true;
+            }
+        }
+
+        const correctCount = records.filter(r => r.isCorrect).length;
+        const accuracy = total > 0 ? Math.round((correctCount / total) * 100) : null;
+
+        if (isGraduated) {
+            return { text: "🎓 已畢業", bgColor: "var(--graduated)", accuracy: accuracy, total: total, isGraduated: true };
         }
         
-        const correctCount = records.filter(r => r.isCorrect).length;
-        const accuracy = Math.round((correctCount / total) * 100);
+        if (total < 3) {
+            return { text: "待評比", bgColor: "#94a3b8", accuracy: null, total: total, isGraduated: false };
+        }
         
         if (accuracy <= 50) {
-            return { text: "不大熟", bgColor: "var(--danger)", accuracy: accuracy, total: total };
+            return { text: "不大熟", bgColor: "var(--danger)", accuracy: accuracy, total: total, isGraduated: false };
         } else if (accuracy < 100) {
-            return { text: "熟", bgColor: "var(--warning)", accuracy: accuracy, total: total };
+            return { text: "熟", bgColor: "var(--warning)", accuracy: accuracy, total: total, isGraduated: false };
         } else {
-            return { text: "精通", bgColor: "var(--success)", accuracy: accuracy, total: total };
+            return { text: "精通", bgColor: "var(--success)", accuracy: accuracy, total: total, isGraduated: false };
         }
     }
 
@@ -336,6 +349,11 @@
         } else {
             evalHtml += `<br><span style="font-size: 14px; color: #64748b;">總測驗次數：${evalObj.total} 次 (需滿 3 次才能評比)</span>`;
         }
+        // 如果是畢業狀態，額外顯示賀詞
+        if (evalObj.isGraduated) {
+            evalHtml += `<br><span style="font-size: 14px; color: var(--graduated); font-weight:bold;">🎉 此單字已達標，不會再出現在測驗中！</span>`;
+        }
+        
         document.getElementById('modal-word-evaluation').innerHTML = evalHtml;
         
         const historyList = document.getElementById('modal-word-list');
@@ -382,24 +400,62 @@
         }
     }
 
+    // ========== 【功能 4 核心】：基於熟練度的智慧抽題引擎 ==========
     function getRandomWordByWeight() {
-        if (activePool.length === 0) return null;
-        let totalWeight = 0; activePool.forEach(w => { totalWeight += (wordWeights[w.id] || 10); });
+        // 1. 過濾掉已畢業的單字
+        const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
+        
+        if (eligiblePool.length === 0) return null; // 全部畢業了
+
+        // 2. 賦予符合條件的單字抽籤權重
+        let totalWeight = 0; 
+        const weights = eligiblePool.map(w => {
+            const evalText = getWordEvaluation(w.id).text;
+            let weight = 10; // 預設防護值
+            
+            if (evalText === "不大熟" || evalText === "待評比") {
+                weight = 50; // 極高機率抽中
+            } else if (evalText === "熟") {
+                weight = 10; // 偶爾抽中
+            } else if (evalText === "精通") {
+                weight = 2;  // 極少抽中，做為保養複習
+            }
+            
+            totalWeight += weight;
+            return weight;
+        });
+
+        // 3. 執行加權隨機抽籤
         let randomNum = Math.random() * totalWeight;
-        for (let i = 0; i < activePool.length; i++) {
-            const w = activePool[i]; const weight = wordWeights[w.id] || 10;
-            if (randomNum < weight) return w; randomNum -= weight;
+        for (let i = 0; i < eligiblePool.length; i++) {
+            if (randomNum < weights[i]) return eligiblePool[i];
+            randomNum -= weights[i];
         }
-        return activePool[activePool.length - 1];
+        return eligiblePool[eligiblePool.length - 1];
     }
+    // ==========================================================
 
     function startSession(mode) {
         if (activePool.length === 0) return;
+        
+        // 檢查是否選定範圍內的所有字都畢業了
+        const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
+        if (eligiblePool.length === 0) {
+            alert("🎉 太棒了！您勾選的範圍內，所有單字都已達標「畢業」，無需再測驗！");
+            return;
+        }
+
         currentSession.mode = mode; currentSession.currentIndex = 0; currentSession.questions = [];
         currentSession.userAnswers = new Array(10).fill(""); currentSession.optionsData = [];
 
+        // 抽出 10 題
         for (let i = 0; i < 10; i++) {
-            let picked = getRandomWordByWeight(); currentSession.questions.push(picked);
+            let picked = getRandomWordByWeight(); 
+            // 萬一遇到單字庫不足 10 字且已被抽光防錯
+            if (!picked) break; 
+            
+            currentSession.questions.push(picked);
+            
             if (mode === 2) {
                 let opts = [picked.translation];
                 let wrongPool = allWords.filter(w => w.translation !== picked.translation).map(w => w.translation);
@@ -408,17 +464,22 @@
                 opts.sort(() => Math.random() - 0.5); currentSession.optionsData.push(opts);
             }
         }
+        
         document.getElementById(`q${mode}-start-screen`).style.display = 'none'; document.getElementById(`q${mode}-result-screen`).style.display = 'none'; document.getElementById(`q${mode}-play-screen`).style.display = 'block'; showQuestion(mode);
     }
 
     function showQuestion(mode) {
         const idx = currentSession.currentIndex; const wordObj = currentSession.questions[idx];
-        document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} / 10 題`;
-        document.getElementById(`q${mode}-stats`).innerText = `目前此字權重：${wordWeights[wordObj.id]} 籤`;
+        document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} / ${currentSession.questions.length} 題`;
+        
+        // 將顯示的提示文字改成目前的狀態，讓測驗時也能感知
+        const evalObj = getWordEvaluation(wordObj.id);
+        document.getElementById(`q${mode}-stats`).innerText = `此單字目前狀態：${evalObj.text}`;
+        
         document.getElementById(`q${mode}-prev`).disabled = (idx === 0);
         
         const finishBtn = document.getElementById(`q${mode}-finish`);
-        if (idx === 9) {
+        if (idx === currentSession.questions.length - 1) {
             document.getElementById(`q${mode}-next`).style.display = 'none'; if(finishBtn) finishBtn.style.display = 'inline-block';
         } else {
             document.getElementById(`q${mode}-next`).style.display = 'inline-block'; if(finishBtn) finishBtn.style.display = 'none';
@@ -444,7 +505,7 @@
     function saveAnswer1() {
         const idx = currentSession.currentIndex; currentSession.userAnswers[idx] = document.getElementById('q1-input').value.trim();
         document.getElementById('q1-feedback').innerText = "已暫存答案！";
-        if (idx < 9) setTimeout(() => { nextQuestion(1); }, 400);
+        if (idx < currentSession.questions.length - 1) setTimeout(() => { nextQuestion(1); }, 400);
     }
 
     function saveAnswer2(selectedOpt, btnElement) {
@@ -452,11 +513,11 @@
         document.querySelectorAll('#q2-options .option-btn').forEach(btn => btn.setAttribute('style', ''));
         btnElement.style.backgroundColor = "var(--primary)"; btnElement.style.color = "white";
         document.getElementById('q2-feedback').innerText = "已選取！";
-        if (idx < 9) setTimeout(() => { nextQuestion(2); }, 400);
+        if (idx < currentSession.questions.length - 1) setTimeout(() => { nextQuestion(2); }, 400);
     }
 
     function nextQuestion(mode) {
-        if (currentSession.currentIndex < 9) {
+        if (currentSession.currentIndex < currentSession.questions.length - 1) {
             if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
             currentSession.currentIndex++; showQuestion(mode);
         }
@@ -471,7 +532,7 @@
     function finishSession(mode) {
         if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
         let correctCount = 0;
-        let reportHtml = `<h2>🎯 測試結果報告</h2><p>您在 10 題中答對了 <strong style="color:var(--success); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
+        let reportHtml = `<h2>🎯 測試結果報告</h2><p>您在 ${currentSession.questions.length} 題中答對了 <strong style="color:var(--success); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
         let sessionRecord = null;
         const testDateString = new Date().toLocaleString('zh-TW'); 
@@ -483,7 +544,6 @@
         currentSession.questions.forEach((wordObj, i) => {
             const userAns = currentSession.userAnswers[i].toLowerCase();
             let isCorrect = mode === 1 ? (userAns === wordObj.word.toLowerCase()) : (currentSession.userAnswers[i] === wordObj.translation);
-            const currentWeight = wordWeights[wordObj.id] || 10;
             
             if (mode === 1) {
                 sessionRecord.details.push({
@@ -498,10 +558,9 @@
             }
 
             if (isCorrect) {
-                correctCount++; wordWeights[wordObj.id] = Math.max(1, currentWeight - 2);
+                correctCount++; 
                 reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`;
             } else {
-                wordWeights[wordObj.id] = Math.min(40, currentWeight + 5);
                 const correctTxt = mode === 1 ? wordObj.word : wordObj.translation;
                 reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">您的答案: ${currentSession.userAnswers[i]||'空'} → 正確: ${correctTxt}</span></div>`;
             }
@@ -519,7 +578,7 @@
         }
 
         reportHtml += `</div><br><button class="btn-submit" onclick="restartMode(${mode})">再測一組 10 題</button>`;
-        saveWeights(); renderWordList(); 
+        renderWordList(); 
         document.getElementById(`q${mode}-play-screen`).style.display = 'none';
         const resScr = document.getElementById(`q${mode}-result-screen`);
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
