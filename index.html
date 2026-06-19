@@ -3,21 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字智慧測驗系統 - 終極版</title>
+    <title>英文單字智慧測驗系統 - 終極遊戲化版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
-        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; --graduated: #8b5cf6; }
+        :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; --graduated: #8b5cf6; --lottery: #ec4899; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--background); color: #333; margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); position: relative; }
         h1, h2 { text-align: center; color: #2c3e50; }
         .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
         .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s; }
         .tab-btn.active { background: var(--primary); color: white; }
+        
+        /* 樂透專屬按鈕特效 */
+        .tab-btn-lottery { background: var(--lottery); color: white; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        
         .panel { display: none; }
         .panel.active { display: block; }
         
         .filter-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
-        .select-input { padding: 10px 15px; font-size: 16px; border-radius: 6px; border: 2px solid #cbd5e1; width: 100%; max-width: 300px; cursor: pointer; font-weight: bold; }
+        
+        /* 自訂下拉複選選單樣式 */
+        .dropdown-check-list { display: inline-block; position: relative; width: 100%; max-width: 350px; text-align: left; }
+        .dropdown-check-list .anchor { width: 100%; position: relative; cursor: pointer; display: inline-block; padding: 10px 15px; border: 2px solid #cbd5e1; border-radius: 6px; background: white; font-weight: bold; box-sizing: border-box; }
+        .dropdown-check-list .items { padding: 10px; display: none; margin: 0; border: 2px solid #cbd5e1; border-top: none; background: white; position: absolute; top: 100%; left: 0; width: 100%; z-index: 10; max-height: 250px; overflow-y: auto; border-radius: 0 0 6px 6px; box-sizing: border-box; }
+        .dropdown-check-list.visible .items { display: block; }
+        .dropdown-check-list .items li { list-style: none; margin-bottom: 10px; font-size: 16px; }
+        .dropdown-check-list .items input[type="checkbox"] { transform: scale(1.2); margin-right: 8px; cursor: pointer; }
         
         .word-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .word-table th, .word-table td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
@@ -47,9 +59,14 @@
         .history-header { font-weight: bold; margin-bottom: 10px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 5px; }
         .history-detail { display: inline-block; width: 48%; margin-bottom: 5px; font-size: 14px; }
         
-        /* 隱藏專屬欄位 */
-        .admin-only { display: none; }
+        .status-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 6px; border: 1px solid rgba(0,0,0,0.1); }
+        .dot-grey { background-color: #94a3b8; }
+        .dot-red { background-color: var(--danger); }
+        .dot-yellow { background-color: var(--warning); }
+        .dot-green { background-color: var(--success); }
+        .dot-purple { background-color: var(--graduated); }
 
+        .admin-only { display: none; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; align-items: center; justify-content: center; }
         .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto; position: relative; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .close-btn { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b; }
@@ -64,6 +81,11 @@
         .stat-subtext { font-size: 14px; color: #94a3b8; }
         .rules-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; margin-top: 20px; }
         .admin-card { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px; padding: 20px; margin-top: 20px; }
+        
+        /* 帳本表格 */
+        .ledger-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
+        .ledger-table th, .ledger-table td { border: 1px solid #fca5a5; padding: 8px; text-align: left; }
+        .ledger-table th { background: #fef2f2; color: #991b1b; }
     </style>
 </head>
 <body>
@@ -76,14 +98,16 @@
         <button class="tab-btn" id="btn-quiz1-tab" onclick="switchTab('quiz1-tab')">中翻英填空</button>
         <button class="tab-btn" id="btn-quiz2-tab" onclick="switchTab('quiz2-tab')">英翻中選擇</button>
         <button class="tab-btn" id="btn-stats-tab" onclick="switchTab('stats-tab')">📊 統計與積分</button>
+        <button class="tab-btn tab-btn-lottery" id="btn-lottery-tab" onclick="switchTab('lottery-tab')" style="display:none;">🎁 突發樂透</button>
     </div>
 
     <div id="filter-wrapper">
         <div class="filter-section">
-            <label for="lesson-select" style="font-weight:bold; margin-right: 10px;">選擇測驗與瀏覽單元：</label>
-            <select id="lesson-select" class="select-input" onchange="updateActivePool()">
-                <option value="">⏳ 正在下載單字庫...</option>
-            </select>
+            <span style="font-weight:bold; margin-right: 10px; font-size: 18px;">選擇測驗單元範圍：</span>
+            <div id="lesson-dropdown" class="dropdown-check-list">
+                <span class="anchor" onclick="toggleDropdown()">⏳ 載入中...</span>
+                <ul id="lesson-checkbox-list" class="items"></ul>
+            </div>
         </div>
         <hr>
     </div>
@@ -97,8 +121,9 @@
                     <th>英文單字</th>
                     <th>發音</th> 
                     <th>中文解釋</th>
-                    <th>熟練度</th>
-                    <th class="admin-only">個別紀錄</th> </tr>
+                    <th>熟練度狀態</th>
+                    <th class="admin-only">個別紀錄</th>
+                </tr>
             </thead>
             <tbody id="word-list-body">
                 <tr><td colspan="6" style="text-align:center;">請先選擇上方單元</td></tr>
@@ -122,13 +147,13 @@
                 <div class="quiz-progress" id="q1-progress">第 1 / 10 題</div>
                 <div class="quiz-box">
                     <div id="q1-question" class="question">題目</div>
-                    <input type="text" id="q1-input" class="input-answer" placeholder="請輸入英文單字" autocomplete="off" onkeyup="if(event.key==='Enter')saveAnswer1()"><br>
+                    <input type="text" id="q1-input" class="input-answer" placeholder="請輸入英文單字" autocomplete="off" onkeyup="if(event.key==='Enter')saveAnswer(1)"><br>
                     <div id="q1-feedback" class="feedback"></div>
                     <div id="q1-stats" class="stats-info"></div>
                 </div>
                 <div class="nav-controls">
                     <button class="btn-nav" id="q1-prev" onclick="prevQuestion(1)">← 上一題</button>
-                    <button class="btn-submit" id="q1-save" onclick="saveAnswer1()">確認本題答案</button>
+                    <button class="btn-submit" id="q1-save" onclick="saveAnswer(1)">確認答案</button>
                     <button class="btn-nav" id="q1-next" onclick="nextQuestion(1)">下一題 →</button>
                     <button class="btn-nav btn-finish" id="q1-finish" onclick="finishSession(1)" style="display:none;">完成測試 (交卷)</button>
                 </div>
@@ -159,6 +184,34 @@
         </div>
     </div>
 
+    <div id="lottery-tab" class="panel">
+        <h2 style="color: var(--lottery);">🎁 本週驚喜：樂透挑戰賽 🎁</h2>
+        <div class="rules-card" style="text-align: left; background: #fdf2f8; border-color: #fbcfe8;">
+            <p><strong>挑戰規則：</strong> 系統已從您「紫燈達標」的字庫中挑選出 <strong>20 個單字</strong> (包含 10 個測試次數最少的字)。</p>
+            <p>只要這 20 題中翻英填空<strong>全部答對 (100%)</strong>，您將立刻獲得 <strong style="color:var(--lottery); font-size:18px;">+1 點積分</strong>！</p>
+            <p style="color:var(--danger); font-size:14px;">⚠️ 提醒：每週只會隨機出現一次機會，挑戰一旦送出就無法重來囉！</p>
+        </div>
+        <div class="quiz-container">
+            <div id="ql-start-screen"><button class="btn-submit" style="background:var(--lottery);" onclick="startLottery()" id="ql-start-btn">🔥 點此開始 20 題挑戰 🔥</button></div>
+            <div id="ql-play-screen" style="display:none;">
+                <div class="quiz-progress" id="ql-progress">第 1 / 20 題</div>
+                <div class="quiz-box" style="border-color: var(--lottery);">
+                    <div id="ql-question" class="question">題目</div>
+                    <input type="text" id="ql-input" class="input-answer" placeholder="請輸入英文單字" autocomplete="off" onkeyup="if(event.key==='Enter')saveAnswer('l')"><br>
+                    <div id="ql-feedback" class="feedback"></div>
+                    <div id="ql-stats" class="stats-info" style="color: var(--lottery);">🎯 樂透挑戰題</div>
+                </div>
+                <div class="nav-controls">
+                    <button class="btn-nav" id="ql-prev" onclick="prevQuestion('l')">← 上一題</button>
+                    <button class="btn-submit" id="ql-save" style="background:var(--lottery);" onclick="saveAnswer('l')">確認答案</button>
+                    <button class="btn-nav" id="ql-next" onclick="nextQuestion('l')">下一題 →</button>
+                    <button class="btn-nav btn-finish" id="ql-finish" onclick="finishLottery()" style="display:none; background:var(--lottery);">繳交樂透考卷</button>
+                </div>
+            </div>
+            <div id="ql-result-screen" style="display:none;"></div>
+        </div>
+    </div>
+
     <div id="stats-tab" class="panel">
         <h2>📊 學習進度與積分面板</h2>
         
@@ -172,7 +225,7 @@
             <div class="stat-card" style="border-color: var(--warning); background: #fffbeb;">
                 <h3 style="color: #d97706;">⭐ 總獲得積分</h3>
                 <div class="stat-value" id="stat-total-points" style="color: var(--warning);">0</div>
-                <div class="stat-subtext">單字里程碑積分 + 連續任務積分</div>
+                <div class="stat-subtext">積分詳情請見下方規則或後台帳本</div>
             </div>
 
             <div class="stat-card">
@@ -192,22 +245,36 @@
                     🟢 精通：最新正確率 100%。<br>
                     🟣 達標 (滿分)：最後連續 3 次皆正確、且分屬<strong>不同日期</strong>。達成即不重複出題。
                 </li>
-                <li><strong>單字里程碑：</strong> 每累積 <strong>50 個達標(紫燈)單字</strong>，獲得 1 點積分。</li>
+                <li><strong>單字里程碑：</strong> 每累積 <strong>50 個達標(紫燈)單字</strong>，自動獲得 1 點積分。</li>
                 <li><strong>連續學習任務：</strong> 若「連續 7 天」完成雙模式測驗，獲得 1 點積分。中斷則重頭計算。</li>
+                <li><strong>突發樂透：</strong> 每週隨機觸發一次。從達標字庫中抽測 20 題，全對得 1 點積分。</li>
             </ul>
         </div>
 
         <div class="admin-card">
-            <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (查看個別紀錄與積分)</h3>
+            <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (積分帳本與設定)</h3>
             <div id="admin-login-area">
                 <input type="password" id="admin-pwd" class="input-answer" style="font-size: 16px; padding: 5px; width: 60%; max-width: 200px; margin-bottom:0;" placeholder="請輸入密碼">
                 <button class="btn-submit" style="background: #b91c1c; padding: 6px 15px; font-size: 16px;" onclick="loginAdmin()">驗證登入</button>
             </div>
+            
             <div id="admin-controls-area" style="display:none; margin-top: 15px;">
-                <p style="color:#16a34a; font-weight:bold; margin-top:0;">🔓 驗證成功！單字清單中的「個別紀錄」查看功能已解鎖。</p>
-                <label style="font-weight:bold; color: #7f1d1d;">強制修改「總積分」為：</label>
-                <input type="number" id="admin-new-points" class="input-answer" style="font-size: 16px; padding: 5px; width: 80px; margin-bottom:0;" min="0">
-                <button class="btn-submit" style="background: #b91c1c; padding: 6px 15px; font-size: 16px;" onclick="setAdminPoints()">確認修改</button>
+                <p style="color:#16a34a; font-weight:bold; margin-top:0;">🔓 驗證成功！已解鎖單字清單的「個別紀錄」與下列管理功能。</p>
+                
+                <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #fca5a5; margin-bottom: 15px;">
+                    <label style="font-weight:bold; color: #7f1d1d;">手動增減積分：</label>
+                    <input type="number" id="admin-new-points" class="input-answer" style="font-size: 16px; padding: 5px; width: 80px; margin-bottom:0;" placeholder="點數">
+                    <button class="btn-submit" style="background: #b91c1c; padding: 6px 15px; font-size: 16px;" onclick="addAdminPoints()">新增至帳本</button>
+                    <span style="font-size: 13px; color:#991b1b; margin-left: 5px;">(可輸入負數來扣點)</span>
+                </div>
+
+                <h4 style="color: #7f1d1d; margin-bottom: 5px;">🧾 積分獲取歷史帳本 (Ledger)</h4>
+                <div style="max-height: 250px; overflow-y: auto;">
+                    <table class="ledger-table">
+                        <thead><tr><th width="30%">時間</th><th width="50%">獲得原因</th><th width="20%">點數變動</th></tr></thead>
+                        <tbody id="ledger-body"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -228,7 +295,9 @@
     const HISTORY_KEY = "quiz1_history"; 
     const WORD_SPECIFIC_HISTORY_KEY = "word_specific_history"; 
     const STREAK_KEY = "user_streak_data";
-    const ADMIN_ADJ_KEY = "admin_points_adjustment";
+    const LEDGER_KEY = "points_ledger";
+    const MILESTONE_KEY = "tracked_milestones";
+    const LOTTERY_KEY = "weekly_lottery_state";
     
     let quiz1History = []; 
     let wordSpecificHistory = {}; 
@@ -237,38 +306,46 @@
     let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
     let isAdminLoggedIn = false;
 
-    let streakData = {
-        currentStreak: 0, lastCompletedDate: "",
-        todayProgress: { date: "", mode1Done: false, mode2Done: false }, earnedStreakPoints: 0
-    };
-    let adminPointAdjustment = 0;
+    // 積分與任務資料結構
+    let pointsLedger = [];
+    let trackedMilestones = 0;
+    let streakData = { currentStreak: 0, lastCompletedDate: "", todayProgress: { date: "", mode1Done: false, mode2Done: false } };
+    let lotteryState = { playedWeek: '', isAvailableNow: false };
+
+    // 取得當前的 ISO 週數 (年份-W週數)
+    function getYearWeek() {
+        let d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+        let w1 = new Date(d.getFullYear(), 0, 4);
+        return d.getFullYear() + '-W' + Math.round(((d.getTime() - w1.getTime()) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
+    }
 
     window.addEventListener('DOMContentLoaded', async () => {
         try {
             quiz1History = JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
             wordSpecificHistory = JSON.parse(localStorage.getItem(WORD_SPECIFIC_HISTORY_KEY)) || {};
-            streakData = JSON.parse(localStorage.getItem(STREAK_KEY)) || {
-                currentStreak: 0, lastCompletedDate: "", todayProgress: { date: "", mode1Done: false, mode2Done: false }, earnedStreakPoints: 0
-            };
-            adminPointAdjustment = parseInt(localStorage.getItem(ADMIN_ADJ_KEY)) || 0;
+            streakData = JSON.parse(localStorage.getItem(STREAK_KEY)) || streakData;
+            pointsLedger = JSON.parse(localStorage.getItem(LEDGER_KEY)) || [];
+            trackedMilestones = parseInt(localStorage.getItem(MILESTONE_KEY)) || 0;
+            lotteryState = JSON.parse(localStorage.getItem(LOTTERY_KEY)) || lotteryState;
         } catch(e) {}
 
-        if (typeof Papa === 'undefined') {
-            document.getElementById('lesson-select').innerHTML = `<option>❌ 嚴重錯誤：無法載入解析套件</option>`; return;
-        }
+        // 下拉選單點擊外部關閉邏輯
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('lesson-dropdown');
+            if (dropdown && !dropdown.contains(event.target)) dropdown.classList.remove('visible');
+        });
 
         try {
             const response = await fetch('words.csv', { cache: 'no-cache' });
             if (!response.ok) throw new Error(`找不到 words.csv`);
             const textData = await response.text();
-            
             Papa.parse(textData.trim(), {
                 header: true, skipEmptyLines: true,
                 complete: function(results) { processParsedData(results.data); },
                 error: function() { alert("CSV 解析失敗"); }
             });
         } catch (error) {
-            document.getElementById('lesson-select').innerHTML = `<option>❌ 讀取失敗: ${error.message}</option>`;
+            document.getElementById('lesson-dropdown').querySelector('.anchor').innerText = `❌ 讀取失敗: ${error.message}`;
         }
     });
 
@@ -293,22 +370,34 @@
             }
         });
 
-        if (allWords.length === 0) { document.getElementById('lesson-select').innerHTML = `<option>❌ 單字庫為空</option>`; return; }
+        if (allWords.length === 0) { document.getElementById('lesson-dropdown').querySelector('.anchor').innerText = `❌ 單字庫為空`; return; }
 
         renderLessonSelect(); 
-        updateActivePool();
+        updateActivePool(); // 預設全選
+        checkMilestonesAndLottery();
         renderStats();
     }
     
     function saveWordSpecificHistory() { try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {} }
     function saveStreakData() { try { localStorage.setItem(STREAK_KEY, JSON.stringify(streakData)); } catch(e) {} }
+    
+    // 將新積分寫入帳本
+    function addLedgerEntry(reason, points) {
+        pointsLedger.unshift({ date: new Date().toLocaleString('zh-TW'), reason: reason, points: points });
+        try { localStorage.setItem(LEDGER_KEY, JSON.stringify(pointsLedger)); } catch(e) {}
+    }
 
-    // 【核心更新 4】：滾動計算最新 5 次正確率與四色燈號
+    // 計算總積分
+    function getTotalPoints() {
+        return pointsLedger.reduce((sum, entry) => sum + entry.points, 0);
+    }
+
+    // 【核心邏輯】：滾動計算最新 5 次正確率與燈號
     function getWordEvaluation(wordId) {
         const records = wordSpecificHistory[wordId] || [];
         const total = records.length;
         
-        // 1. 紫燈判斷：最後 3 次全對，且橫跨 3 個不同日期
+        // 1. 紫燈判斷：最後 3 次全對且跨 3 天
         let isGraduated = false;
         if (total >= 3) {
             let consecutiveCorrect = 0;
@@ -323,82 +412,89 @@
                 isGraduated = true;
             }
         }
+        if (isGraduated) return { text: "已達標", badge: "🟣", classColor:"dot-purple", isGraduated: true, accuracy: null, total: total };
 
-        if (isGraduated) {
-            return { text: "達標", badge: "🟣", isGraduated: true, accuracy: null, total: total };
-        }
-
-        // 2. 擷取最新最多 5 次紀錄進行機率計算
+        // 2. 擷取最新 5 次
         const recentRecords = records.slice(-5);
         const recentTotal = recentRecords.length;
 
-        // 如果連 3 次都沒有，顯示灰燈待評比
-        if (recentTotal < 3) {
-            return { text: "待評比", badge: "⚪", isGraduated: false, accuracy: null, total: total };
-        }
+        if (recentTotal < 3) return { text: "待評比", badge: "⚪", classColor:"dot-grey", isGraduated: false, accuracy: null, total: total };
         
-        // 最新 5 次內的正確率計算
         const correctCount = recentRecords.filter(r => r.isCorrect).length;
         const accuracy = Math.round((correctCount / recentTotal) * 100);
         
-        if (accuracy <= 50) {
-            return { text: "不大熟", badge: "🔴", isGraduated: false, accuracy: accuracy, total: total };
-        } else if (accuracy < 100) {
-            return { text: "熟", badge: "🟡", isGraduated: false, accuracy: accuracy, total: total };
-        } else {
-            return { text: "精通", badge: "🟢", isGraduated: false, accuracy: accuracy, total: total };
-        }
+        if (accuracy <= 50) return { text: "不大熟", badge: "🔴", classColor:"dot-red", isGraduated: false, accuracy: accuracy, total: total };
+        else if (accuracy < 100) return { text: "熟", badge: "🟡", classColor:"dot-yellow", isGraduated: false, accuracy: accuracy, total: total };
+        else return { text: "精通", badge: "🟢", classColor:"dot-green", isGraduated: false, accuracy: accuracy, total: total };
     }
 
-    // 【核心更新 1】：下拉選單渲染
+    // ================= 自訂下拉複選選單邏輯 =================
+    function toggleDropdown() {
+        document.getElementById('lesson-dropdown').classList.toggle('visible');
+    }
+
     function renderLessonSelect() {
-        const lessons = [];
-        const seen = new Set();
+        const lessons = []; const seen = new Set();
         allWords.forEach(w => {
             const key = `${w.lesson}-${w.title}`;
             if (!seen.has(key)) { seen.add(key); lessons.push({ id: w.lesson, title: w.title }); }
         });
         lessons.sort((a, b) => (parseInt(a.id) || 0) - (parseInt(b.id) || 0));
 
-        const select = document.getElementById('lesson-select');
-        // 加入「全部單元」的選項
-        let optionsHtml = `<option value="ALL">🌟 全部單元總複習</option>`;
-        optionsHtml += lessons.map(l => `<option value="${l.id}">Lesson ${l.id} (${l.title})</option>`).join('');
-        select.innerHTML = optionsHtml;
+        const ul = document.getElementById('lesson-checkbox-list');
+        let html = `<li><label><input type="checkbox" id="chk-all" checked onchange="toggleAllLessons(this)"> <strong>🌟 全部單元</strong></label></li>`;
+        lessons.forEach(l => {
+            html += `<li><label><input type="checkbox" class="chk-lesson" value="${l.id}" checked onchange="updateActivePool()"> Lesson ${l.id} (${l.title})</label></li>`;
+        });
+        ul.innerHTML = html;
+        updateDropdownAnchorText();
+    }
+
+    function toggleAllLessons(source) {
+        const checkboxes = document.querySelectorAll('.chk-lesson');
+        checkboxes.forEach(cb => cb.checked = source.checked);
+        updateActivePool();
+    }
+
+    function updateDropdownAnchorText() {
+        const checkboxes = document.querySelectorAll('.chk-lesson');
+        const checkedBoxes = document.querySelectorAll('.chk-lesson:checked');
+        const anchor = document.getElementById('lesson-dropdown').querySelector('.anchor');
+        document.getElementById('chk-all').checked = (checkboxes.length === checkedBoxes.length && checkboxes.length > 0);
+        
+        if (checkedBoxes.length === checkboxes.length && checkboxes.length > 0) {
+            anchor.innerText = "選擇單元 (已全選) ▼";
+        } else if (checkedBoxes.length === 0) {
+            anchor.innerText = "選擇單元 (未選擇) ▼";
+        } else {
+            anchor.innerText = `選擇單元 (已選 ${checkedBoxes.length} 個) ▼`;
+        }
     }
 
     function updateActivePool() {
-        const selectedLesson = document.getElementById('lesson-select').value;
-        if (selectedLesson === "ALL") {
-            activePool = [...allWords];
-        } else {
-            activePool = allWords.filter(w => w.lesson === selectedLesson);
-        }
+        updateDropdownAnchorText();
+        const checkedLessons = Array.from(document.querySelectorAll('.chk-lesson:checked')).map(el => el.value);
+        activePool = allWords.filter(w => checkedLessons.includes(w.lesson));
         
         renderWordList();
-        
         document.getElementById('q1-start-screen').style.display = 'block'; document.getElementById('q1-play-screen').style.display = 'none'; document.getElementById('q1-result-screen').style.display = 'none';
         document.getElementById('q2-start-screen').style.display = 'block'; document.getElementById('q2-play-screen').style.display = 'none'; document.getElementById('q2-result-screen').style.display = 'none';
         
         const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
-        const startText = eligiblePool.length > 0 ? "開始 10 題測試" : "🎉 範圍內單字皆已達標！";
+        const startText = eligiblePool.length > 0 ? "開始 10 題測試" : "🎉 勾選範圍皆已達標！";
         
-        document.getElementById('q1-start-btn').innerText = startText;
-        document.getElementById('q1-start-btn').disabled = (eligiblePool.length === 0);
-        document.getElementById('q2-start-btn').innerText = startText;
-        document.getElementById('q2-start-btn').disabled = (eligiblePool.length === 0);
+        document.getElementById('q1-start-btn').innerText = startText; document.getElementById('q1-start-btn').disabled = (eligiblePool.length === 0);
+        document.getElementById('q2-start-btn').innerText = startText; document.getElementById('q2-start-btn').disabled = (eligiblePool.length === 0);
     }
+    // =======================================================
 
     function renderWordList() {
         const tbody = document.getElementById('word-list-body');
-        if (activePool.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">無單字資料</td></tr>'; return;
-        }
+        if (activePool.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">無符合條件的單字</td></tr>'; return; }
+        
         tbody.innerHTML = activePool.map(w => {
             const evalObj = getWordEvaluation(w.id);
-            // 【核心更新 2】：燈號與文字組合
-            const statusHtml = `<span style="font-size: 18px;">${evalObj.badge}</span> <strong>${evalObj.text}</strong>`;
-            
+            const statusHtml = `<span class="status-dot ${evalObj.classColor}"></span> <strong>${evalObj.text}</strong>`;
             return `
             <tr>
                 <td>L${w.lesson} - ${w.title}</td>
@@ -409,27 +505,21 @@
                 </td>
                 <td>${w.translation}</td>
                 <td>${statusHtml}</td>
-                <td class="admin-only">
-                    <button class="btn-nav" style="padding: 6px 12px; font-size: 14px; background: #8b5cf6;" onclick="openWordHistoryModal('${w.id}')">📊 查看</button>
-                </td>
-            </tr>
-            `;
+                <td class="admin-only"><button class="btn-nav" style="padding: 6px 12px; font-size: 14px; background: #8b5cf6;" onclick="openWordHistoryModal('${w.id}')">📊 查看</button></td>
+            </tr>`;
         }).join('');
-        
         refreshAdminUIElements();
     }
 
     function openWordHistoryModal(wordId) {
-        const wordObj = allWords.find(w => w.id === wordId);
-        if (!wordObj) return;
-
+        const wordObj = allWords.find(w => w.id === wordId); if (!wordObj) return;
         document.getElementById('modal-word-title').innerText = `單字 [ ${wordObj.word} ]`;
         document.getElementById('modal-word-translation').innerText = `中文解釋：${wordObj.translation}`;
         
         const evalObj = getWordEvaluation(wordId);
-        let evalHtml = `目前燈號評比：<span style="font-size: 18px; margin-left:8px;">${evalObj.badge}</span> <strong>${evalObj.text}</strong>`;
+        let evalHtml = `目前燈號評比：<span class="status-dot ${evalObj.classColor}" style="margin-left:8px;"></span> <strong>${evalObj.text}</strong>`;
         if (evalObj.accuracy !== null) {
-            evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(滾動擷取最新測試正確率：${evalObj.accuracy}% / 總測驗次數：${evalObj.total} 次)</span>`;
+            evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(滾動擷取最新 5 次正確率：${evalObj.accuracy}% / 總測驗次數：${evalObj.total} 次)</span>`;
         } else {
             evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(總測驗次數：${evalObj.total} 次，不足 3 次暫不評比)</span>`;
         }
@@ -445,95 +535,114 @@
             records.slice().reverse().forEach(record => {
                 const icon = record.isCorrect ? '⭕' : '❌';
                 const color = record.isCorrect ? 'var(--success)' : 'var(--danger)';
-                html += `
-                    <li class="word-history-item">
-                        <div>${icon} 時間：${record.date}</div>
-                        ${!record.isCorrect ? `<div style="color:${color}; font-size:13px; margin-left:24px;">作答: <strong>${record.userAnswer || '(未填寫)'}</strong></div>` : ''}
-                    </li>`;
+                html += `<li class="word-history-item"><div>${icon} 時間：${record.date}</div>
+                        ${!record.isCorrect ? `<div style="color:${color}; font-size:13px; margin-left:24px;">作答: <strong>${record.userAnswer || '(未填寫)'}</strong></div>` : ''}</li>`;
             });
             historyList.innerHTML = html;
         }
 
         document.getElementById('modal-word-reset-btn').onclick = function() {
             if (confirm(`確定要清空 [ ${wordObj.word} ] 的專屬測試紀錄嗎？`)) {
-                delete wordSpecificHistory[wordId];
-                saveWordSpecificHistory();
-                openWordHistoryModal(wordId); 
-                renderWordList(); 
-                renderStats();
+                delete wordSpecificHistory[wordId]; saveWordSpecificHistory(); openWordHistoryModal(wordId); 
+                renderWordList(); renderStats();
             }
         };
         document.getElementById('word-history-modal').style.display = 'flex';
     }
-
     function closeWordHistoryModal() { document.getElementById('word-history-modal').style.display = 'none'; }
 
-    // ================= 統計面板與【核心更新 3：管理員權限】 =================
+    // ================= 統計面板、里程碑與樂透檢查 =================
+    function checkMilestonesAndLottery() {
+        // 1. 檢查里程碑
+        let graduatedCount = allWords.filter(w => getWordEvaluation(w.id).isGraduated).length;
+        let newMilestone = Math.floor(graduatedCount / 50);
+        if (newMilestone > trackedMilestones) {
+            let pointsGained = newMilestone - trackedMilestones;
+            addLedgerEntry(`單字里程碑：累積達標 ${newMilestone * 50} 個單字`, pointsGained);
+            trackedMilestones = newMilestone;
+            try { localStorage.setItem(MILESTONE_KEY, trackedMilestones); } catch(e){}
+        }
+
+        // 2. 檢查本週樂透
+        const currentWeek = getYearWeek();
+        if (lotteryState.playedWeek !== currentWeek) {
+            // 還沒玩過這週的
+            if (!lotteryState.isAvailableNow) {
+                // 每天有 30% 機率出現，或者是禮拜日必定出現
+                if (Math.random() < 0.3 || new Date().getDay() === 0) {
+                    lotteryState.isAvailableNow = true;
+                }
+            }
+        } else {
+            lotteryState.isAvailableNow = false; // 已玩過
+        }
+        try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
+        
+        // 顯示樂透按鈕條件：isAvailableNow 且 達標單字 >= 20
+        if (lotteryState.isAvailableNow && graduatedCount >= 20) {
+            document.getElementById('btn-lottery-tab').style.display = 'inline-block';
+        } else {
+            document.getElementById('btn-lottery-tab').style.display = 'none';
+        }
+    }
+
     function renderStats() {
         let totalWordsCount = allWords.length;
-        let graduatedCount = 0;
-        allWords.forEach(w => { if (getWordEvaluation(w.id).isGraduated) graduatedCount++; });
-        
+        let graduatedCount = allWords.filter(w => getWordEvaluation(w.id).isGraduated).length;
         document.getElementById('stat-words-ratio').innerText = `${graduatedCount} / ${totalWordsCount}`;
-
-        let wordsPoints = Math.floor(graduatedCount / 50);
-        let totalPoints = Math.max(0, wordsPoints + streakData.earnedStreakPoints + adminPointAdjustment);
-        document.getElementById('stat-total-points').innerText = totalPoints;
+        document.getElementById('stat-total-points').innerText = Math.max(0, getTotalPoints());
 
         const todayStr = new Date().toDateString();
         let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toDateString();
 
         let displayStreak = streakData.currentStreak;
-        if (streakData.lastCompletedDate !== todayStr && streakData.lastCompletedDate !== yesterdayStr) {
-            displayStreak = 0; 
-        }
+        if (streakData.lastCompletedDate !== todayStr && streakData.lastCompletedDate !== yesterdayStr) { displayStreak = 0; }
         document.getElementById('stat-streak-days').innerText = displayStreak;
 
         let statusText = "今日進度：";
         let m1 = (streakData.todayProgress.date === todayStr && streakData.todayProgress.mode1Done) ? "🟢" : "⚪";
         let m2 = (streakData.todayProgress.date === todayStr && streakData.todayProgress.mode2Done) ? "🟢" : "⚪";
-        
-        if (streakData.lastCompletedDate === todayStr) {
-            statusText = `<span style="color:var(--success);">✅ 今日雙模式任務達成！</span>`;
-        } else {
-            statusText += `填空 ${m1} | 選擇 ${m2}`;
-        }
+        if (streakData.lastCompletedDate === todayStr) { statusText = `<span style="color:var(--success);">✅ 今日雙模式任務達成！</span>`; } 
+        else { statusText += `填空 ${m1} | 選擇 ${m2}`; }
         document.getElementById('stat-streak-status').innerHTML = statusText;
+        
+        renderLedgerTable();
+    }
+
+    function renderLedgerTable() {
+        const tbody = document.getElementById('ledger-body');
+        if (pointsLedger.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">尚無積分變動紀錄</td></tr>'; return;
+        }
+        tbody.innerHTML = pointsLedger.map(entry => {
+            let color = entry.points > 0 ? "var(--success)" : (entry.points < 0 ? "var(--danger)" : "#64748b");
+            let sign = entry.points > 0 ? "+" : "";
+            return `<tr><td>${entry.date}</td><td>${entry.reason}</td><td style="color:${color}; font-weight:bold;">${sign}${entry.points}</td></tr>`;
+        }).join('');
     }
 
     function loginAdmin() {
-        const pwd = document.getElementById('admin-pwd').value;
-        if (pwd === "fcchang") {
+        if (document.getElementById('admin-pwd').value === "fcchang") {
             isAdminLoggedIn = true;
             document.getElementById('admin-login-area').style.display = "none";
             document.getElementById('admin-controls-area').style.display = "block";
-            document.getElementById('admin-new-points').value = document.getElementById('stat-total-points').innerText;
             refreshAdminUIElements();
-        } else {
-            alert("密碼錯誤，拒絕存取。");
-        }
+        } else { alert("密碼錯誤，拒絕存取。"); }
     }
 
-    function setAdminPoints() {
-        const targetPoints = parseInt(document.getElementById('admin-new-points').value);
-        if (isNaN(targetPoints) || targetPoints < 0) return alert("請輸入有效的正整數");
-        
-        let graduatedCount = allWords.filter(w => getWordEvaluation(w.id).isGraduated).length;
-        let wordsPoints = Math.floor(graduatedCount / 50);
-        let basePoints = wordsPoints + streakData.earnedStreakPoints;
-        
-        adminPointAdjustment = targetPoints - basePoints;
-        try { localStorage.setItem(ADMIN_ADJ_KEY, adminPointAdjustment); } catch(e) {}
-        alert("積分強制修改成功！");
+    function addAdminPoints() {
+        const p = parseInt(document.getElementById('admin-new-points').value);
+        if (isNaN(p)) return alert("請輸入有效數字");
+        addLedgerEntry("管理員手動調整點數", p);
+        document.getElementById('admin-new-points').value = "";
+        alert("已成功寫入積分帳本！");
         renderStats();
     }
 
     function refreshAdminUIElements() {
         const els = document.querySelectorAll('.admin-only');
-        els.forEach(el => {
-            el.style.display = isAdminLoggedIn ? (el.tagName === 'TH' || el.tagName === 'TD' ? 'table-cell' : 'block') : 'none';
-        });
+        els.forEach(el => { el.style.display = isAdminLoggedIn ? (el.tagName === 'TH' || el.tagName === 'TD' ? 'table-cell' : 'block') : 'none'; });
     }
     // ==========================================================
 
@@ -541,8 +650,7 @@
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US'; utterance.rate = rate; 
-            window.speechSynthesis.speak(utterance);
+            utterance.lang = 'en-US'; utterance.rate = rate; window.speechSynthesis.speak(utterance);
         }
     }
 
@@ -569,6 +677,7 @@
         return eligiblePool[eligiblePool.length - 1];
     }
 
+    // ================= 測驗與樂透流程 =================
     function startSession(mode) {
         if (activePool.length === 0) return;
         const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
@@ -578,8 +687,7 @@
         currentSession.userAnswers = new Array(10).fill(""); currentSession.optionsData = [];
 
         for (let i = 0; i < 10; i++) {
-            let picked = getRandomWordByWeight(); 
-            if (!picked) break; 
+            let picked = getRandomWordByWeight(); if (!picked) break; 
             currentSession.questions.push(picked);
             
             if (mode === 2) {
@@ -593,14 +701,39 @@
         document.getElementById(`q${mode}-start-screen`).style.display = 'none'; document.getElementById(`q${mode}-result-screen`).style.display = 'none'; document.getElementById(`q${mode}-play-screen`).style.display = 'block'; showQuestion(mode);
     }
 
+    function startLottery() {
+        let gradWords = allWords.filter(w => getWordEvaluation(w.id).isGraduated);
+        if (gradWords.length < 20) return alert("達標字庫不足 20 個，無法開啟樂透！");
+
+        // 將達標單字加上測試次數並排序
+        let gradWithCounts = gradWords.map(w => ({ word: w, count: (wordSpecificHistory[w.id] || []).length }));
+        gradWithCounts.sort((a,b) => a.count - b.count);
+
+        // 10個最少的 + 10個從剩下的隨機抽
+        let leastTested = gradWithCounts.slice(0, 10).map(i => i.word);
+        let remaining = gradWithCounts.slice(10).map(i => i.word);
+        remaining.sort(() => Math.random() - 0.5);
+        let random10 = remaining.slice(0, 10);
+        
+        let lotteryQuestions = [...leastTested, ...random10];
+        lotteryQuestions.sort(() => Math.random() - 0.5); // 打亂最終20題順序
+
+        currentSession.mode = 'l'; currentSession.currentIndex = 0; currentSession.questions = lotteryQuestions;
+        currentSession.userAnswers = new Array(20).fill("");
+        
+        document.getElementById('ql-start-screen').style.display = 'none'; document.getElementById('ql-result-screen').style.display = 'none'; document.getElementById('ql-play-screen').style.display = 'block'; showQuestion('l');
+    }
+
     function showQuestion(mode) {
         const idx = currentSession.currentIndex; const wordObj = currentSession.questions[idx];
         document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} / ${currentSession.questions.length} 題`;
         
-        const evalObj = getWordEvaluation(wordObj.id);
-        document.getElementById(`q${mode}-stats`).innerText = `目前燈號：${evalObj.badge} ${evalObj.text}`;
-        document.getElementById(`q${mode}-prev`).disabled = (idx === 0);
+        if(mode !== 'l') {
+            const evalObj = getWordEvaluation(wordObj.id);
+            document.getElementById(`q${mode}-stats`).innerText = `目前燈號：${evalObj.badge} ${evalObj.text}`;
+        }
         
+        document.getElementById(`q${mode}-prev`).disabled = (idx === 0);
         const finishBtn = document.getElementById(`q${mode}-finish`);
         if (idx === currentSession.questions.length - 1) {
             document.getElementById(`q${mode}-next`).style.display = 'none'; if(finishBtn) finishBtn.style.display = 'inline-block';
@@ -608,10 +741,10 @@
             document.getElementById(`q${mode}-next`).style.display = 'inline-block'; if(finishBtn) finishBtn.style.display = 'none';
         }
 
-        if (mode === 1) {
-            document.getElementById('q1-question').innerText = `請寫出英文：「 ${wordObj.translation} 」`;
-            const inputField = document.getElementById('q1-input'); inputField.value = currentSession.userAnswers[idx]; 
-            document.getElementById('q1-feedback').innerText = currentSession.userAnswers[idx] ? "💡 本題已暫存答案" : "";
+        if (mode === 1 || mode === 'l') {
+            document.getElementById(`q${mode}-question`).innerText = `請寫出英文：「 ${wordObj.translation} 」`;
+            const inputField = document.getElementById(`q${mode}-input`); inputField.value = currentSession.userAnswers[idx]; 
+            document.getElementById(`q${mode}-feedback`).innerText = currentSession.userAnswers[idx] ? "💡 本題已暫存答案" : "";
             inputField.focus();
         } else {
             document.getElementById('q2-question').innerText = wordObj.word;
@@ -625,10 +758,10 @@
         }
     }
 
-    function saveAnswer1() {
-        const idx = currentSession.currentIndex; currentSession.userAnswers[idx] = document.getElementById('q1-input').value.trim();
-        document.getElementById('q1-feedback').innerText = "已暫存答案！";
-        if (idx < currentSession.questions.length - 1) setTimeout(() => { nextQuestion(1); }, 400);
+    function saveAnswer(mode) {
+        const idx = currentSession.currentIndex; currentSession.userAnswers[idx] = document.getElementById(`q${mode}-input`).value.trim();
+        document.getElementById(`q${mode}-feedback`).innerText = "已暫存答案！";
+        if (idx < currentSession.questions.length - 1) setTimeout(() => { nextQuestion(mode); }, 400);
     }
 
     function saveAnswer2(selectedOpt, btnElement) {
@@ -641,13 +774,13 @@
 
     function nextQuestion(mode) {
         if (currentSession.currentIndex < currentSession.questions.length - 1) {
-            if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
+            if(mode === 1 || mode === 'l') currentSession.userAnswers[currentSession.currentIndex] = document.getElementById(`q${mode}-input`).value.trim();
             currentSession.currentIndex++; showQuestion(mode);
         }
     }
     function prevQuestion(mode) {
         if (currentSession.currentIndex > 0) {
-            if(mode === 1) currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('q1-input').value.trim();
+            if(mode === 1 || mode === 'l') currentSession.userAnswers[currentSession.currentIndex] = document.getElementById(`q${mode}-input`).value.trim();
             currentSession.currentIndex--; showQuestion(mode);
         }
     }
@@ -657,9 +790,7 @@
         let correctCount = 0;
         let reportHtml = `<h2>🎯 測試結果報告</h2><p>您在 ${currentSession.questions.length} 題中答對了 <strong style="color:var(--success); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
-        let sessionRecord = null;
-        const testDateString = new Date().toLocaleString('zh-TW'); 
-
+        let sessionRecord = null; const testDateString = new Date().toLocaleString('zh-TW'); 
         if (mode === 1) { sessionRecord = { date: testDateString, details: [] }; }
 
         currentSession.questions.forEach((wordObj, i) => {
@@ -667,19 +798,13 @@
             let isCorrect = mode === 1 ? (userAns === wordObj.word.toLowerCase()) : (currentSession.userAnswers[i] === wordObj.translation);
             
             if (mode === 1) {
-                sessionRecord.details.push({
-                    word: wordObj.word, translation: wordObj.translation,
-                    userAnswer: currentSession.userAnswers[i] || '', isCorrect: isCorrect
-                });
+                sessionRecord.details.push({ word: wordObj.word, translation: wordObj.translation, userAnswer: currentSession.userAnswers[i] || '', isCorrect: isCorrect });
                 if (!wordSpecificHistory[wordObj.id]) wordSpecificHistory[wordObj.id] = [];
-                wordSpecificHistory[wordObj.id].push({
-                    date: testDateString, isCorrect: isCorrect, userAnswer: currentSession.userAnswers[i] || ''
-                });
+                wordSpecificHistory[wordObj.id].push({ date: testDateString, isCorrect: isCorrect, userAnswer: currentSession.userAnswers[i] || '' });
             }
 
             if (isCorrect) {
-                correctCount++; 
-                reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`;
+                correctCount++; reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`;
             } else {
                 const correctTxt = mode === 1 ? wordObj.word : wordObj.translation;
                 reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">您的答案: ${currentSession.userAnswers[i]||'空'} → 正確: ${correctTxt}</span></div>`;
@@ -687,8 +812,7 @@
         });
 
         if (mode === 1) {
-            sessionRecord.score = correctCount;
-            quiz1History.unshift(sessionRecord);
+            sessionRecord.score = correctCount; quiz1History.unshift(sessionRecord);
             if (quiz1History.length > 100) quiz1History.length = 100;
             try { localStorage.setItem(HISTORY_KEY, JSON.stringify(quiz1History)); } catch(e) {}
             saveWordSpecificHistory();
@@ -696,31 +820,22 @@
         }
 
         const todayStr = new Date().toDateString();
-        if (streakData.todayProgress.date !== todayStr) {
-            streakData.todayProgress = { date: todayStr, mode1Done: false, mode2Done: false };
-        }
-
+        if (streakData.todayProgress.date !== todayStr) { streakData.todayProgress = { date: todayStr, mode1Done: false, mode2Done: false }; }
         if (mode === 1) streakData.todayProgress.mode1Done = true;
         if (mode === 2) streakData.todayProgress.mode2Done = true;
 
         if (streakData.todayProgress.mode1Done && streakData.todayProgress.mode2Done && streakData.lastCompletedDate !== todayStr) {
-            let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-            let yesterdayStr = yesterday.toDateString();
-
-            if (streakData.lastCompletedDate === yesterdayStr) { streakData.currentStreak++; } 
-            else { streakData.currentStreak = 1; }
+            let yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1); let yesterdayStr = yesterday.toDateString();
+            if (streakData.lastCompletedDate === yesterdayStr) { streakData.currentStreak++; } else { streakData.currentStreak = 1; }
             streakData.lastCompletedDate = todayStr;
 
             if (streakData.currentStreak >= 7) {
-                streakData.earnedStreakPoints++; streakData.currentStreak = 0;
+                addLedgerEntry("連續 7 天完成雙模式任務", 1); streakData.currentStreak = 0;
                 alert("🎉 賀！連續 7 天滿貫任務達成，獲得 1 點積分！");
-            } else {
-                alert(`🔥 今日雙模式達成！目前已連續完成任務 ${streakData.currentStreak} 天！`);
-            }
+            } else { alert(`🔥 今日雙模式達成！目前已連續完成任務 ${streakData.currentStreak} 天！`); }
         }
-        saveStreakData();
-        renderWordList(); 
-        renderStats();
+        
+        saveStreakData(); checkMilestonesAndLottery(); renderWordList(); renderStats();
 
         reportHtml += `</div><br><button class="btn-submit" onclick="restartMode(${mode})">再測一組</button>`;
         document.getElementById(`q${mode}-play-screen`).style.display = 'none';
@@ -728,11 +843,40 @@
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
     }
 
-    function toggleHistory1() {
-        const screen = document.getElementById('q1-history-screen');
-        if (screen.style.display === 'none') { renderHistory1(); screen.style.display = 'block'; } else { screen.style.display = 'none'; }
+    function finishLottery() {
+        currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('ql-input').value.trim();
+        let correctCount = 0;
+        let reportHtml = `<h2>🎁 樂透挑戰結算</h2><p>20 題中答對了 <strong style="color:var(--lottery); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
+
+        currentSession.questions.forEach((wordObj, i) => {
+            const userAns = currentSession.userAnswers[i].toLowerCase();
+            let isCorrect = (userAns === wordObj.word.toLowerCase());
+            if (isCorrect) { correctCount++; reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`; } 
+            else { reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">答案: ${currentSession.userAnswers[i]||'空'} → 正確: ${wordObj.word}</span></div>`; }
+        });
+
+        // 樂透結果判定
+        if (correctCount === 20) {
+            addLedgerEntry("本週突發樂透挑戰 20 題全對", 1);
+            reportHtml = `<h2 style="color:var(--lottery);">🎉 恭喜中獎！🎉</h2><p>太強了！20 題全對，已將 1 點積分存入帳本！</p>` + reportHtml;
+        } else {
+            reportHtml = `<h2>💦 差一點點！</h2><p>再接再厲！要 20 題全對才能拿到積分喔，下週還有機會！</p>` + reportHtml;
+        }
+        reportHtml += `</div><br><button class="btn-submit" onclick="switchTab('list-tab')">返回清單</button>`;
+        
+        // 關閉本週樂透
+        lotteryState.playedWeek = getYearWeek();
+        lotteryState.isAvailableNow = false;
+        try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
+        document.getElementById('btn-lottery-tab').style.display = 'none';
+
+        renderStats();
+        document.getElementById('ql-play-screen').style.display = 'none';
+        const resScr = document.getElementById('ql-result-screen');
+        resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
     }
 
+    function toggleHistory1() { const s = document.getElementById('q1-history-screen'); if (s.style.display === 'none') { renderHistory1(); s.style.display = 'block'; } else { s.style.display = 'none'; } }
     function renderHistory1() {
         const container = document.getElementById('q1-history-content');
         if (quiz1History.length === 0) { container.innerHTML = '<p style="color: #64748b;">無測試紀錄。</p>'; return; }
@@ -740,22 +884,12 @@
         quiz1History.forEach((session) => {
             html += `<div class="history-session"><div class="history-header">🕒 測驗時間: ${session.date} <span style="float: right;">答對: <strong style="color:var(--success)">${session.score}</strong> / 10</span></div><div>`;
             session.details.forEach(detail => {
-                const icon = detail.isCorrect ? '⭕' : '❌';
-                const color = detail.isCorrect ? 'var(--success)' : 'var(--danger)';
-                html += `<div class="history-detail">${icon} ${detail.translation} (${detail.word})<br><span style="color:${color}; font-size:12px; margin-left: 20px;">您的作答: ${detail.userAnswer || '(未填寫)'}</span></div>`;
-            });
-            html += `</div></div>`;
-        });
-        container.innerHTML = html;
+                const icon = detail.isCorrect ? '⭕' : '❌'; const color = detail.isCorrect ? 'var(--success)' : 'var(--danger)';
+                html += `<div class="history-detail">${icon} ${detail.translation} (${detail.word})<br><span style="color:${color}; font-size:12px; margin-left: 20px;">作答: ${detail.userAnswer || '(未填寫)'}</span></div>`;
+            }); html += `</div></div>`;
+        }); container.innerHTML = html;
     }
-
-    function clearHistory1() {
-        if (confirm("確定要清空整卷填空歷史紀錄嗎？")) {
-            quiz1History = []; try { localStorage.removeItem(HISTORY_KEY); } catch(e) {}
-            renderHistory1(); alert("已完全清空！");
-        }
-    }
-
+    function clearHistory1() { if (confirm("確定要清空整卷填空歷史紀錄嗎？")) { quiz1History = []; try { localStorage.removeItem(HISTORY_KEY); } catch(e) {} renderHistory1(); alert("已完全清空！"); } }
     function restartMode(mode) { document.getElementById(`` + `q${mode}-result-screen`).style.display = 'none'; document.getElementById(`` + `q${mode}-start-screen`).style.display = 'block'; updateActivePool(); }
     
     function switchTab(tabId) { 
@@ -764,13 +898,9 @@
         document.getElementById('btn-' + tabId).classList.add('active'); 
         document.getElementById(tabId).classList.add('active'); 
         
-        if(tabId === 'stats-tab') {
-            document.getElementById('filter-wrapper').style.display = 'none';
-            renderStats(); 
-        } else {
-            document.getElementById('filter-wrapper').style.display = 'block';
-            updateActivePool(); 
-        }
+        if(tabId === 'stats-tab') { document.getElementById('filter-wrapper').style.display = 'none'; renderStats(); } 
+        else if(tabId === 'lottery-tab') { document.getElementById('filter-wrapper').style.display = 'none'; }
+        else { document.getElementById('filter-wrapper').style.display = 'block'; updateActivePool(); }
     }
 </script>
 </body>
