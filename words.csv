@@ -23,7 +23,6 @@ aa,4,Big,house,房子,1
 aa,4,Big,dog,狗,1
 aa,4,Big,car,車,1
 aa,4,Big,bus,巴士,1
-aa,4,Big,plane,飛機,1
 aa,4,Big,tree,樹,1
 aa,4,Big,elephant,大象,1
 aa,4,Big,dinosaur,恐龍,1
@@ -77,34 +76,559 @@ aa,11,Christmas Eve,card,卡片,1
 aa,11,Christmas Eve,present,禮物,1
 aa,11,Christmas Eve,stocking,長筒襪,1
 aa,11,Christmas Eve,cookies,餅乾,1
-aa,12,City Street,taxi,,1
-aa,12,City Street,bus,,1
-aa,12,City Street,people,,1
-aa,12,City Street,street,,1
-aa,12,City Street,building,,1
-aa,12,City Street,food,,1
-aa,12,City Street,sidewalk,,1
-aa,12,City Street,steps,,1
-aa,13,The City,car,,1
-aa,13,The City,bus,,1
-aa,13,The City,store,,1
-aa,13,The City,park,,1
-aa,13,The City,building,,1
-aa,13,The City,people,,1
-aa,13,The City,noise,,1
-aa,14,The classroom,chair,,1
-aa,14,The classroom,desk,,1
-aa,14,The classroom,book,,1
-aa,14,The classroom,paper,,1
-aa,14,The classroom,pencil,,1
-aa,14,The classroom,eraser,,1
-aa,14,The classroom,backpack,,1
-aa,14,The classroom,classroom,,1
-aa,15,The coast,ocean,,1
-aa,15,The coast,wave,,1
-aa,15,The coast,beach,,1
-aa,15,The coast,rock,,1
-aa,15,The coast,cliff,,1
-aa,15,The coast,bird,,1
-aa,15,The coast,lighthouse,,1
-aa,15,The coast,coast,,1
+aa,12,City Street,taxi,計程車,1
+aa,12,City Street,bus,巴士,1
+aa,12,City Street,people,人,1
+aa,12,City Street,street,街道,1
+aa,12,City Street,building,建築物,1
+aa,12,City Street,food,食物,1
+aa,12,City Street,sidewalk,人行道,1
+aa,12,City Street,steps,階梯,1
+aa,13,The City,car,車,1
+aa,13,The City,bus,巴士,1
+aa,13,The City,store,商店,1
+aa,13,The City,park,公園,1
+aa,13,The City,building,建築物,1
+aa,13,The City,people,人,1
+aa,13,The City,noise,噪音,1
+aa,14,The classroom,chair,椅子,1
+aa,14,The classroom,desk,書桌(有抽屜),1
+aa,14,The classroom,book,書,1
+aa,14,The classroom,paper,紙,1
+aa,14,The classroom,pencil,鉛筆,1
+aa,14,The classroom,eraser,橡皮擦,1
+aa,14,The classroom,backpack,背包,1
+aa,14,The classroom,classroom,教室,1
+aa,15,The coast,ocean,海洋,1
+aa,15,The coast,wave,波浪,1
+aa,15,The coast,beach,沙灘,1
+aa,15,The coast,rock,石頭,1
+aa,15,The coast,cliff,懸崖,1
+aa,15,The coast,bird,鳥,1
+aa,15,The coast,lighthouse,燈塔,1
+aa,15,The coast,coast,海岸,1
+aa,16,Colorful Eggs,red,紅色,1
+aa,16,Colorful Eggs,yellow,黃色,1
+aa,16,Colorful Eggs,pink,粉紅色,1
+aa,16,Colorful Eggs,purple,紫色,1
+aa,16,Colorful Eggs,orange,橘色,1
+aa,16,Colorful Eggs,green,綠色,1
+aa,16,Colorful Eggs,blue,藍色,1
+aa,16,Colorful Eggs,colorful,彩色,1
+aa,17,Eight,backpack,背包,1
+aa,17,Eight,bottle,水瓶,1
+aa,17,Eight,raincoat,雨衣,1
+aa,17,Eight,chair,椅子,1
+aa,17,Eight,light,燈光,1
+aa,17,Eight,stick,木棍,1
+aa,17,Eight,hot dog,熱狗,1
+aa,17,Eight,friend,朋友,1
+aa,18,Eleven,card,卡片,1
+aa,18,Eleven,balloon,氣球,1
+aa,18,Eleven,hat,帽子,1
+aa,18,Eleven,pizza,比薩,1
+aa,18,Eleven,cupcake,杯子蛋糕,1
+aa,18,Eleven,present,禮物,1
+aa,18,Eleven,candy bar,糖果棒,1
+aa,19,Farm animals,dog,狗,1
+aa,19,Farm animals,pig ,豬,1
+aa,19,Farm animals,chicken,雞,1
+aa,19,Farm animals,goat,山羊,1
+aa,19,Farm animals,cow,乳牛,1
+aa,19,Farm animals,duck,鴨子,1
+aa,19,Farm animals,sheep,綿羊,1
+aa,19,Farm animals,animal,動物,1
+aa,20,Fido Gets Dressed,sweater,毛衣,1
+aa,20,Fido Gets Dressed,boots,靴子,1
+aa,20,Fido Gets Dressed,hat,帽子,1
+aa,20,Fido Gets Dressed,scarf,圍巾,1
+aa,20,Fido Gets Dressed,sunglasses,太陽眼鏡,1
+aa,20,Fido Gets Dressed,cape ,披風,1
+aa,20,Fido Gets Dressed,mask,面具,1
+aa,21,Five,cup,杯子,1
+aa,21,Five,plate,盤子,1
+aa,21,Five,bowl,碗,1
+aa,21,Five,fork,叉子,1
+aa,21,Five,spoon,湯匙,1
+aa,21,Five,pan,鍋子,1
+aa,21,Five,chair,椅子,1
+aa,21,Five,lunch,午餐,1
+aa,22,The Fort,friend,朋友,1
+aa,22,The Fort,pillow,枕頭,1
+aa,22,The Fort,blanket,毯子,1
+aa,22,The Fort,food,食物,1
+aa,22,The Fort,game,遊戲,1
+aa,22,The Fort,light,燈光,1
+aa,22,The Fort,fort,堡壘,1
+aa,23,Four,bus,巴士,1
+aa,23,Four,wagon,手拉車,1
+aa,23,Four,cart,推車,1
+aa,23,Four,airplane,飛機,1
+aa,23,Four,boat,船,1
+aa,23,Four,truck,卡車,1
+aa,23,Four,van,廂型車,1
+aa,24,Good night,story,故事,1
+aa,24,Good night,bed,床,1
+aa,24,Good night,pillow,枕頭,1
+aa,24,Good night,bear,熊,1
+aa,24,Good night,blanket,毯子,1
+aa,24,Good night,kiss,親吻,1
+aa,24,Good night,moon,月亮,1
+aa,24,Good night,dream,夢,1
+aa,25,Green,snake,蛇,1
+aa,25,Green,leaf,葉子,1
+aa,25,Green,moss,苔蘚,1
+aa,25,Green,frog,青蛙,1
+aa,25,Green,bird,鳥,1
+aa,25,Green,insect,昆蟲,1
+aa,25,Green,lizard,蜥蜴,1
+aa,25,Green,forest,森林,1
+aa,26,In,grass,草,1
+aa,26,In,mud,泥漿,1
+aa,26,In,bathtub,浴缸,1
+aa,27,It is fall,leaf,葉子,1
+aa,27,It is fall,apple,蘋果,1
+aa,27,It is fall,acorn,橡子,1
+aa,27,It is fall,corn,玉米,1
+aa,27,It is fall,pumpkin,南瓜,1
+aa,27,It is fall,rake,耙,1
+aa,27,It is fall,moon,月亮,1
+aa,27,It is fall,jacket,夾克,1
+aa,28,Jump Over,jump Over,跳過去,1
+aa,28,Jump Over,horse,馬,1
+aa,28,Jump Over,fox,狐狸,1
+aa,28,Jump Over,deer,鹿,1
+aa,28,Jump Over,goat,山羊,1
+aa,28,Jump Over,girl,女孩,1
+aa,28,Jump Over,cow,乳牛,1
+aa,29,Little,little,小的,1
+aa,29,Little,house,房子,1
+aa,29,Little,dog,狗,1
+aa,29,Little,car,車,1
+aa,29,Little,tree,樹,1
+aa,29,Little,bug,蟲 ,1
+aa,29,Little,mouse,老鼠,1
+aa,29,Little,baby,嬰兒,1
+aa,30,Lunch at School,friend,朋友,1
+aa,30,Lunch at School,bag,包包,1
+aa,30,Lunch at School,milk,牛奶,1
+aa,30,Lunch at School,noodle,麵,1
+aa,30,Lunch at School,carrot,紅蘿蔔,1
+aa,30,Lunch at School,cookie,餅乾,1
+aa,30,Lunch at School,napkin,餐巾,1
+aa,30,Lunch at School,lunch,午餐,1
+aa,31,My bath,tub,浴缸,1
+aa,31,My bath,water,水,1
+aa,31,My bath,bubble,泡泡,1
+aa,31,My bath,toy,玩具,1
+aa,31,My bath,soap,肥皂,1
+aa,31,My bath,shampoo,洗髮精,1
+aa,31,My bath,towel,毛巾,1
+aa,31,My bath,bath,洗澡,1
+aa,32,My Closet,hanger,衣架,1
+aa,32,My Closet,shirt,襯杉,1
+aa,32,My Closet,pants,長褲,1
+aa,32,My Closet,dress,洋裝,1
+aa,32,My Closet,shoe,鞋子,1
+aa,32,My Closet,belt,皮帶,1
+aa,32,My Closet,blanket,毯子,1
+aa,32,My Closet,closet,衣櫥,1
+aa,33,My Easter,dress,洋裝,1
+aa,33,My Easter,hat,帽子,1
+aa,33,My Easter,basket,籃子,1
+aa,33,My Easter,egg,蛋,1
+aa,33,My Easter,candy,糖果,1
+aa,33,My Easter,flower,花,1
+aa,33,My Easter,family,家庭,1
+aa,34,My family,mother,媽媽,1
+aa,34,My family,father,爸爸,1
+aa,34,My family,brother,兄弟,1
+aa,34,My family,sister,姐妹,1
+aa,34,My family,grandfather,爺爺,1
+aa,34,My family,grandmother,奶奶,1
+aa,35,My Garden,shovel,鏟子,1
+aa,35,My Garden,dirt,泥土,1
+aa,35,My Garden,hoe,鋤頭,1
+aa,35,My Garden,row,行,1
+aa,35,My Garden,seed,種子,1
+aa,35,My Garden,hose,水管,1
+aa,35,My Garden,plant,植物,1
+aa,35,My Garden,garden,花園,1
+aa,36,My Gift for Mom,day,那一天,1
+aa,36,My Gift for Mom,bowl,碗,1
+aa,36,My Gift for Mom,box,盒子,1
+aa,36,My Gift for Mom,paper,紙,1
+aa,36,My Gift for Mom,bow,蝴蝶結,1
+aa,36,My Gift for Mom,gift,禮物,1
+aa,36,My Gift for Mom,smile,微笑,1
+aa,36,My Gift for Mom,hug,擁抱,1
+aa,37,My Hanukkah,family,家庭,1
+aa,37,My Hanukkah,candle,蠟蠋,1
+aa,37,My Hanukkah,bread,麵包,1
+aa,37,My Hanukkah,toy,玩具,1
+aa,37,My Hanukkah,gift,禮物,1
+aa,37,My Hanukkah,candy,糖果,1
+aa,37,My Hanukkah,cookie,餅乾,1
+aa,38,My school bus,walk,走,1
+aa,38,My school bus,bench,長椅,1
+aa,38,My school bus,bus,巴士,1
+aa,38,My school bus,door,門,1
+aa,38,My school bus,step,台階,1
+aa,38,My school bus,seat,座位,1
+aa,38,My school bus,window,窗戶,1
+aa,38,My school bus,school,學校,1
+aa,39,Nine,cow,乳牛,1
+aa,39,Nine,horse,馬,1
+aa,39,Nine,pig,豬,1
+aa,39,Nine,bull,公牛,1
+aa,39,Nine,goat,山羊,1
+aa,39,Nine,chicken,雞,1
+aa,39,Nine,sheep,綿羊,1
+aa,39,Nine,goose,鵝,1
+aa,40,Off,bed,床,1
+aa,40,Off,couch,沙發,1
+aa,40,Off,table,桌子,1
+aa,40,Off,chair,椅子,1
+aa,40,Off,computer,電腦,1
+aa,40,Off,towel,毛巾,1
+aa,40,Off,step,台階,1
+aa,41,On,house,房子,1
+aa,41,On,bike,腳踏車,1
+aa,41,On,swing,鞦韆,1
+aa,41,On,bed,床,1
+aa,41,On,airplane,飛機,1
+aa,41,On,fence,圍籬,1
+aa,41,On,table,桌子,1
+aa,41,On,skates,溜冰鞋,1
+aa,42,One,pillow,枕頭,1
+aa,42,One,window,窗戶,1
+aa,42,One,book,書,1
+aa,42,One,toy,玩具,1
+aa,42,One,rug,地毯,1
+aa,42,One,blanket,毯子,1
+aa,42,One,desk,書桌(有抽屜),1
+aa,43,One insect,head,頭,1
+aa,43,One insect,body,身體,1
+aa,43,One insect,leg,腳,1
+aa,44,Orange,tree,樹,1
+aa,44,Orange,leaf,葉子,1
+aa,44,Orange,pumpkin,南瓜,1
+aa,44,Orange,flower,花,1
+aa,44,Orange,butterfly,蝴蝶,1
+aa,44,Orange,snake,蛇,1
+aa,44,Orange,field,田地,1
+aa,44,Orange,sunset,日落,1
+aa,45,Out,wagon,手拉車,1
+aa,45,Out,boat,船,1
+aa,45,Out,house,房子,1
+aa,45,Out,water,水,1
+aa,45,Out,grass,草,1
+aa,45,Out,mud,泥漿,1
+aa,45,Out,bathtub,浴缸,1
+aa,46,Over,log,木材,1
+aa,46,Over,pot,罐壺,1
+aa,46,Over,hole,洞,1
+aa,46,Over,bike,腳踏車,1
+aa,46,Over,bat,木棒,1
+aa,46,Over,ball,球,1
+aa,46,Over,doll,洋娃娃,1
+aa,46,Over,cat,貓,1
+aa,47,Pasta,pasta,義大利麵,1
+aa,47,Pasta,long,長的,1
+aa,47,Pasta,short,短的,1
+aa,47,Pasta,wide,寬的,1
+aa,47,Pasta,thin,窄的,1
+aa,47,Pasta,curly,捲的,1
+aa,48,Pets,pet,竉物,1
+aa,48,Pets,cat,貓,1
+aa,48,Pets,dog,狗,1
+aa,48,Pets,bunny,免子,1
+aa,48,Pets,bird,鳥,1
+aa,48,Pets,goldfish,金魚,1
+aa,48,Pets,mouse,老鼠,1
+aa,48,Pets,turtle,烏龜,1
+aa,48,Pets,hamster,倉鼠,1
+aa,49,Picking Apples,pick,挑,1
+aa,49,Picking Apples,farmer,農夫,1
+aa,49,Picking Apples,tractor,拖引車,1
+aa,49,Picking Apples,tree,樹,1
+aa,49,Picking Apples,basket,籃子,1
+aa,49,Picking Apples,ladder,梯子,1
+aa,49,Picking Apples,friend,朋友,1
+aa,49,Picking Apples,wagon,手拉車,1
+aa,50,Plain Animals,Plain,平原,1
+aa,50,Plain Animals,fox,狐狸,1
+aa,50,Plain Animals,elephant,大象,1
+aa,50,Plain Animals,giraffe,長頸鹿,1
+aa,50,Plain Animals,lion,獅子,1
+aa,50,Plain Animals,zebra,斑馬,1
+aa,50,Plain Animals,ostrich,鴕鳥,1
+aa,50,Plain Animals,crocodile,鱷魚,1
+aa,51,Play Ball,beach,沙灘,1
+aa,51,Play Ball,baseball,棒球,1
+aa,51,Play Ball,basketball,籃球,1
+aa,51,Play Ball,football,美式足球,1
+aa,51,Play Ball,tennis,網球,1
+aa,51,Play Ball,golf,高爾夫球,1
+aa,51,Play Ball,soccer,足球,1
+aa,51,Play Ball,volleyball,排球,1
+aa,52,The Post Office,letter,信,1
+aa,52,The Post Office,scale,稱重計,1
+aa,52,The Post Office,stamp,郵票,1
+aa,52,The Post Office,line,隊伍,1
+aa,53,Purple,purple,紫色,1
+aa,53,Purple,shirt,襯杉,1
+aa,53,Purple,hat,帽子,1
+aa,53,Purple,flip-flop,夾腳拖,1
+aa,53,Purple,ball,球,1
+aa,53,Purple,towel,毛巾,1
+aa,53,Purple,backpack,背包,1
+aa,53,Purple,bucket,水筒,1
+aa,53,Purple,ice pop,冰棒,1
+aa,54,Rainforest Animals,cat,貓,1
+aa,54,Rainforest Animals,monkey,猴子,1
+aa,54,Rainforest Animals,frog,青蛙,1
+aa,54,Rainforest Animals,parrot,鸚鵡,1
+aa,54,Rainforest Animals,snake,蛇,1
+aa,54,Rainforest Animals,butterfly,蝴蝶,1
+aa,54,Rainforest Animals,beetle,甲蟲,1
+aa,54,Rainforest Animals,rainforest,雨林,1
+aa,55,Red,tomato,蕃茄,1
+aa,55,Red,beet,甜菜,1
+aa,55,Red,cherry,櫻桃,1
+aa,55,Red,strawberry,草莓,1
+aa,55,Red,pepper,胡椒,1
+aa,55,Red,potato,馬鈴薯,1
+aa,55,Red,radish,白蘿蔔,1
+aa,56,Seven,worm,蠕蟲,1
+aa,56,Seven,ladybug,瓢蟲,1
+aa,56,Seven,spider,蜘蛛,1
+aa,56,Seven,frog,青蛙,1
+aa,56,Seven,lizard,蜥蝪,1
+aa,56,Seven,snake,蛇,1
+aa,56,Seven,snail,蝸牛,1
+aa,56,Seven,turtle,烏龜,1
+aa,57,Show some love,smile,微笑,1
+aa,57,Show some love,hug,擁抱,1
+aa,57,Show some love,pat,輕拍,1
+aa,57,Show some love,card,卡片,1
+aa,57,Show some love,gift,禮物,1
+aa,57,Show some love,kiss,親吻,1
+aa,57,Show some love,wink,眨眼,1
+aa,57,Show some love,lick,舔,1
+aa,58,Six,shirt,襯杉,1
+aa,58,Six,pants,長褲,1
+aa,58,Six,dress,洋裝,1
+aa,58,Six,shorts,短褲,1
+aa,58,Six,socks,襪子,1
+aa,58,Six,coat,大衣,1
+aa,58,Six,gloves,手套,1
+aa,58,Six,hat,帽子,1
+aa,59,Spring,ball,球,1
+aa,59,Spring,bike,腳踏車,1
+aa,59,Spring,bird,鳥,1
+aa,59,Spring,flower,花,1
+aa,59,Spring,rain,雨,1
+aa,59,Spring,rainbow,彩虹,1
+aa,59,Spring,bunny,兔子,1
+aa,59,Spring,spring,春天,1
+aa,60,Summer Camp,summer,夏天,1
+aa,60,Summer Camp,camp,露營,1
+aa,60,Summer Camp,kid,孩子,1
+aa,60,Summer Camp,game,遊戲,1
+aa,60,Summer Camp,art,美術,1
+aa,60,Summer Camp,lunch,午餐,1
+aa,60,Summer Camp,lake,湖,1
+aa,60,Summer Camp,song,歌,1
+aa,61,Summer Picnic,picnic,野餐,1
+aa,61,Summer Picnic,shoes,鞋子,1
+aa,61,Summer Picnic,cup,杯子,1
+aa,61,Summer Picnic,plate,盤子,1
+aa,61,Summer Picnic,food,食物,1
+aa,61,Summer Picnic,sun,太陽,1
+aa,61,Summer Picnic,fun,好玩的,1
+aa,62,Summer,sunshine,陽光,1
+aa,62,Summer,rain,雨,1
+aa,62,Summer,beach,沙灘,1
+aa,62,Summer,swimsuit,泳裝,1
+aa,62,Summer,garden,花園,1
+aa,62,Summer,summer,夏天,1
+aa,63,Ten,apple,蘋果,1
+aa,63,Ten,strawberry,草莓,1
+aa,63,Ten,carrot,紅蘿蔔,1
+aa,63,Ten,pear,梨,1
+aa,63,Ten,beet,甜菜,1
+aa,63,Ten,potato,馬鈴薯,1
+aa,63,Ten,tomato,蕃茄,1
+aa,63,Ten,lemon,檸檬,1
+aa,64,The Garden,pea,碗豆,1
+aa,64,The Garden,bean,豆子,1
+aa,64,The Garden,melon,甜瓜,1
+aa,64,The Garden,onion,洋蔥,1
+aa,64,The Garden,potato,馬鈴薯,1
+aa,64,The Garden,tomato,蕃茄,1
+aa,64,The Garden,corn,玉米,1
+aa,64,The Garden,garden,花園,1
+aa,65,The Ocean,water,水,1
+aa,65,The Ocean,sand,沙,1
+aa,65,The Ocean,coral,珊瑚,1
+aa,65,The Ocean,seaweed,海草,1
+aa,65,The Ocean,fish,魚,1
+aa,65,The Ocean,crab,螃蟹,1
+aa,65,The Ocean,starfish,海星,1
+aa,65,The Ocean,ocean,海洋,1
+aa,66,The Plant,dirt,泥土,1
+aa,66,The Plant,shovel,鏟子,1
+aa,66,The Plant,hole,洞,1
+aa,66,The Plant,seed,種子,1
+aa,66,The Plant,rain,雨,1
+aa,66,The Plant,sunshine,陽光,1
+aa,66,The Plant,plant,植物,1
+aa,67,The Playground,gate,門,1
+aa,67,The Playground,swing,鞦韆,1
+aa,67,The Playground,slide,溜滑梯,1
+aa,67,The Playground,sandbox,沙坑,1
+aa,67,The Playground,ladder,梯子,1
+aa,67,The Playground,bridge,橋,1
+aa,67,The Playground,wheel,輪子,1
+aa,67,The Playground,playground,遊樂場,1
+aa,68,The School,school,學校,1
+aa,68,The School,classroom,教室,1
+aa,68,The School,music,音樂,1
+aa,68,The School,art,美術,1
+aa,68,The School,lunchroom,午餐室,1
+aa,68,The School,library,圖書館,1
+aa,68,The School,gym,健身房,1
+aa,68,The School,playground,遊樂場,1
+aa,69,The Street,gate,門,1
+aa,69,The Street,mailbox,信箱,1
+aa,69,The Street,sidewalk,人行道,1
+aa,69,The Street,fence,籬笆,1
+aa,69,The Street,flower,花,1
+aa,69,The Street,bike,腳踏車,1
+aa,69,The Street,friend,朋友,1
+aa,69,The Street,street,街道,1
+aa,70,The Subway,subway,地下鐵,1
+aa,70,The Subway,stair,階梯,1
+aa,70,The Subway,ticket,票,1
+aa,70,The Subway,gate,門,1
+aa,70,The Subway,people,人,1
+aa,70,The Subway,time,時間,1
+aa,70,The Subway,tunnel,隧道,1
+aa,70,The Subway,door,門,1
+aa,71,The supermarket,supermarket,超級市場,1
+aa,71,The supermarket,cart,推車,1
+aa,71,The supermarket,fruit,水果,1
+aa,71,The supermarket,vegetable,蔬菜,1
+aa,71,The supermarket,bread,麵包,1
+aa,71,The supermarket,cereal,麥片,1
+aa,71,The supermarket,meat,肉,1
+aa,71,The supermarket,egg,蛋,1
+aa,71,The supermarket,checkout,結帳,1
+aa,72,The Trip,trip,旅行,1
+aa,72,The Trip,clothes,衣服,1
+aa,72,The Trip,suitcase,行李箱,1
+aa,72,The Trip,map,地圖,1
+aa,72,The Trip,car,車,1
+aa,72,The Trip,seat belt,安全帶,1
+aa,72,The Trip,book,書,1
+aa,72,The Trip,grandparents,祖父母,1
+aa,73,These Birds,dove,鴿子,1
+aa,73,These Birds,hawk,鷹,1
+aa,73,These Birds,crow,烏鴉,1
+aa,73,These Birds,owl,貓頭鷹,1
+aa,73,These Birds,eagle,鵰,1
+aa,73,These Birds,goose,鵝,1
+aa,73,These Birds,turkey,火雞,1
+aa,74,This Kitchen,kitchen,廚房,1
+aa,74,This Kitchen,stove,火爐,1
+aa,74,This Kitchen,sink,水槽,1
+aa,74,This Kitchen,fridge,冰箱,1
+aa,74,This Kitchen,cupboard,櫥櫃,1
+aa,74,This Kitchen,counter,櫃檯,1
+aa,74,This Kitchen,toaster,烤土司機,1
+aa,74,This Kitchen,cookie jar,餅乾罐,1
+aa,74,This Kitchen,trash can,垃圾筒,1
+aa,75,Three,tiger,老虎,1
+aa,75,Three,lion,獅子,1
+aa,75,Three,bear,熊,1
+aa,75,Three,monkey,猴子,1
+aa,75,Three,elephant,大象,1
+aa,75,Three,camel,駱駝,1
+aa,75,Three,frog,青蛙,1
+aa,75,Three,panda,熊貓,1
+aa,76,Too Many Sweets,cake,蛋糕,1
+aa,76,Too Many Sweets,cookie,餅乾,1
+aa,76,Too Many Sweets,cupcake,杯子蛋糕,1
+aa,76,Too Many Sweets,ice cream,冰淇淋,1
+aa,76,Too Many Sweets,pie,派,1
+aa,76,Too Many Sweets,brownie,布朗尼,1
+aa,76,Too Many Sweets,candy,糖果,1
+aa,76,Too Many Sweets,belly,肚子,1
+aa,76,Too Many Sweets,sweet,甜食,1
+aa,77,Toys,block,積木,1
+aa,77,Toys,bear,熊,1
+aa,77,Toys,paint,畫,1
+aa,77,Toys,drum,鼓,1
+aa,77,Toys,wagon,手拉車,1
+aa,77,Toys,kite,風箏,1
+aa,77,Toys,robot,機器人,1
+aa,78,Twelve,apron,圍裙,1
+aa,78,Twelve,cup,杯子,1
+aa,78,Twelve,bowl,碗,1
+aa,78,Twelve,spoon,湯匙,1
+aa,78,Twelve,pan,鍋子,1
+aa,78,Twelve,cookie,餅乾,1
+aa,78,Twelve,plate,盤子,1
+aa,79,Two,bee,蜜蜂,1
+aa,79,Two,fish,魚,1
+aa,79,Two,kid,孩子,1
+aa,80,Under,under,在…之下,1
+aa,80,Under,chair,椅子,1
+aa,80,Under,desk,書桌(有抽屜),1
+aa,80,Under,table,桌子,1
+aa,80,Under,umbrella,雨傘,1
+aa,80,Under,swing,鞦韆,1
+aa,81,Valentine's Day Gifts,balloon,氣球,1
+aa,81,Valentine's Day Gifts,chocolate,巧克力,1
+aa,81,Valentine's Day Gifts,valentine,情人,1
+aa,82,Water,ocean,海洋,1
+aa,82,Water,lake,湖,1
+aa,82,Water,river,河,1
+aa,82,Water,snow,雪,1
+aa,82,Water,ice,冰,1
+aa,82,Water,water,水,1
+aa,83,We Build,draw,畫,1
+aa,83,We Build,saw,鋸,1
+aa,83,We Build,sand,打磨/沙,1
+aa,83,We Build,hammer,敲/鐵鎚,1
+aa,83,We Build,drill,鑽,1
+aa,83,We Build,paint,畫,1
+aa,83,We Build,glue,黏/膠水,1
+aa,83,We Build,hang,掛,1
+aa,84,We Go Camping,drive,開車,1
+aa,84,We Go Camping,spot,地點,1
+aa,84,We Go Camping,tool,工具,1
+aa,84,We Go Camping,tent,帳篷,1
+aa,84,We Go Camping,fire,火,1
+aa,84,We Go Camping,food,食物,1
+aa,84,We Go Camping,story,故事,1
+aa,84,We Go Camping,camp,露營,1
+aa,85,White,snow,雪,1
+aa,85,White,fox,狐狸,1
+aa,85,White,whale,鯨魚,1
+aa,85,White,seal,海豹,1
+aa,85,White,owl,貓頭鷹,1
+aa,85,White,igloo,冰屋,1
+aa,86,Winter,winter,冬天,1
+aa,86,Winter,skates,溜冰鞋,1
+aa,86,Winter,sled,雪橇,1
+aa,86,Winter,snowman,雪人,1
+aa,86,Winter,mittens,連指手套,1
+aa,86,Winter,coat,大衣,1
+aa,86,Winter,fire,火,1
+aa,87,Yellow,cab,計程車,1
+aa,87,Yellow,sign,訊號,1
+aa,87,Yellow,truck,卡車,1
+aa,87,Yellow,vest,背心,1
+aa,87,Yellow,line,線,1
