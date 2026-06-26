@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字智慧測驗系統 - 終極遊戲化版</title>
+    <title>英文單字智慧測驗系統 - 終極防重置版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; --graduated: #8b5cf6; --lottery: #ec4899; }
@@ -14,7 +14,6 @@
         .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s; }
         .tab-btn.active { background: var(--primary); color: white; }
         
-        /* 樂透專屬按鈕特效 */
         .tab-btn-lottery { background: var(--lottery); color: white; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
@@ -23,7 +22,6 @@
         
         .filter-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
         
-        /* 自訂下拉複選選單樣式 */
         .dropdown-check-list { display: inline-block; position: relative; width: 100%; max-width: 350px; text-align: left; }
         .dropdown-check-list .anchor { width: 100%; position: relative; cursor: pointer; display: inline-block; padding: 10px 15px; border: 2px solid #cbd5e1; border-radius: 6px; background: white; font-weight: bold; box-sizing: border-box; }
         .dropdown-check-list .items { padding: 10px; display: none; margin: 0; border: 2px solid #cbd5e1; border-top: none; background: white; position: absolute; top: 100%; left: 0; width: 100%; z-index: 10; max-height: 250px; overflow-y: auto; border-radius: 0 0 6px 6px; box-sizing: border-box; }
@@ -82,7 +80,6 @@
         .rules-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; margin-top: 20px; }
         .admin-card { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px; padding: 20px; margin-top: 20px; }
         
-        /* 帳本表格 */
         .ledger-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
         .ledger-table th, .ledger-table td { border: 1px solid #fca5a5; padding: 8px; text-align: left; }
         .ledger-table th { background: #fef2f2; color: #991b1b; }
@@ -187,7 +184,7 @@
     <div id="lottery-tab" class="panel">
         <h2 style="color: var(--lottery);">🎁 本週驚喜：樂透挑戰賽 🎁</h2>
         <div class="rules-card" style="text-align: left; background: #fdf2f8; border-color: #fbcfe8;">
-            <p><strong>挑戰規則：</strong> 系統已從您「紫燈達標」的字庫中挑選出 <strong>20 個單字</strong> (包含 10 個測試次數最少的字)。</p>
+            <p><strong>挑戰規則：</strong> 系統已從您「紫燈達標」的字庫中挑選出 <strong>20 個單字</strong> (優先挑選測試次數最少的字)。</p>
             <p>只要這 20 題中翻英填空<strong>全部答對 (100%)</strong>，您將立刻獲得 <strong style="color:var(--lottery); font-size:18px;">+1 點積分</strong>！</p>
             <p style="color:var(--danger); font-size:14px;">⚠️ 提醒：每週只會隨機出現一次機會，挑戰一旦送出就無法重來囉！</p>
         </div>
@@ -225,7 +222,7 @@
             <div class="stat-card" style="border-color: var(--warning); background: #fffbeb;">
                 <h3 style="color: #d97706;">⭐ 總獲得積分</h3>
                 <div class="stat-value" id="stat-total-points" style="color: var(--warning);">0</div>
-                <div class="stat-subtext">積分詳情請見下方規則或後台帳本</div>
+                <div class="stat-subtext">單字里程碑積分 + 連續任務積分</div>
             </div>
 
             <div class="stat-card">
@@ -306,13 +303,11 @@
     let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
     let isAdminLoggedIn = false;
 
-    // 積分與任務資料結構
     let pointsLedger = [];
     let trackedMilestones = 0;
     let streakData = { currentStreak: 0, lastCompletedDate: "", todayProgress: { date: "", mode1Done: false, mode2Done: false } };
     let lotteryState = { playedWeek: '', isAvailableNow: false };
 
-    // 取得當前的 ISO 週數 (年份-W週數)
     function getYearWeek() {
         let d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
         let w1 = new Date(d.getFullYear(), 0, 4);
@@ -327,9 +322,33 @@
             pointsLedger = JSON.parse(localStorage.getItem(LEDGER_KEY)) || [];
             trackedMilestones = parseInt(localStorage.getItem(MILESTONE_KEY)) || 0;
             lotteryState = JSON.parse(localStorage.getItem(LOTTERY_KEY)) || lotteryState;
+
+            // ⚠️【防重置機制】：無縫升級舊版紀錄 ID (將 "1_boat" 自動轉為 "boat")
+            let needsSave = false;
+            let newSpecificHistory = {};
+            for (let key in wordSpecificHistory) {
+                let newKey = key;
+                if (key.includes('_')) {
+                    newKey = key.split('_').slice(1).join('_').toLowerCase().trim();
+                    needsSave = true;
+                } else {
+                    newKey = key.toLowerCase().trim();
+                    if(newKey !== key) needsSave = true;
+                }
+                
+                if (!newSpecificHistory[newKey]) {
+                    newSpecificHistory[newKey] = wordSpecificHistory[key];
+                } else {
+                    newSpecificHistory[newKey] = newSpecificHistory[newKey].concat(wordSpecificHistory[key]);
+                }
+            }
+            if (needsSave) {
+                wordSpecificHistory = newSpecificHistory;
+                localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory));
+            }
+
         } catch(e) {}
 
-        // 下拉選單點擊外部關閉邏輯
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('lesson-dropdown');
             if (dropdown && !dropdown.contains(event.target)) dropdown.classList.remove('visible');
@@ -360,12 +379,20 @@
             const keyTrans = keys.find(k => k.toLowerCase().includes('translation') || k.toLowerCase().includes('trans'));
 
             if (keyWord && keyTrans && row[keyWord] && row[keyTrans]) {
+                let cleanLesson = keyLesson && row[keyLesson] ? String(row[keyLesson]).trim() : '1';
+                let cleanTitle = keyTitle && row[keyTitle] ? String(row[keyTitle]).trim() : '未分類';
+                let cleanWord = String(row[keyWord]).trim();
+                let cleanTrans = String(row[keyTrans]).trim();
+                
+                // ⚠️【防重置機制】：改用純單字小寫當作 ID，不怕被移單元或多空白
+                let wordId = cleanWord.toLowerCase();
+
                 allWords.push({
-                    lesson: keyLesson && row[keyLesson] ? String(row[keyLesson]).trim() : '1',
-                    title: keyTitle && row[keyTitle] ? String(row[keyTitle]).trim() : '未分類',
-                    word: String(row[keyWord]).trim(),
-                    translation: String(row[keyTrans]).trim(),
-                    id: `${row[keyLesson]}_${row[keyWord]}`
+                    lesson: cleanLesson,
+                    title: cleanTitle,
+                    word: cleanWord,
+                    translation: cleanTrans,
+                    id: wordId
                 });
             }
         });
@@ -373,7 +400,7 @@
         if (allWords.length === 0) { document.getElementById('lesson-dropdown').querySelector('.anchor').innerText = `❌ 單字庫為空`; return; }
 
         renderLessonSelect(); 
-        updateActivePool(); // 預設全選
+        updateActivePool(); 
         checkMilestonesAndLottery();
         renderStats();
     }
@@ -381,23 +408,16 @@
     function saveWordSpecificHistory() { try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {} }
     function saveStreakData() { try { localStorage.setItem(STREAK_KEY, JSON.stringify(streakData)); } catch(e) {} }
     
-    // 將新積分寫入帳本
     function addLedgerEntry(reason, points) {
         pointsLedger.unshift({ date: new Date().toLocaleString('zh-TW'), reason: reason, points: points });
         try { localStorage.setItem(LEDGER_KEY, JSON.stringify(pointsLedger)); } catch(e) {}
     }
+    function getTotalPoints() { return pointsLedger.reduce((sum, entry) => sum + entry.points, 0); }
 
-    // 計算總積分
-    function getTotalPoints() {
-        return pointsLedger.reduce((sum, entry) => sum + entry.points, 0);
-    }
-
-    // 【核心邏輯】：滾動計算最新 5 次正確率與燈號
     function getWordEvaluation(wordId) {
         const records = wordSpecificHistory[wordId] || [];
         const total = records.length;
         
-        // 1. 紫燈判斷：最後 3 次全對且跨 3 天
         let isGraduated = false;
         if (total >= 3) {
             let consecutiveCorrect = 0;
@@ -408,13 +428,10 @@
                     correctDates.add(records[i].date.split(/[ ,]+/)[0]);
                 } else { break; }
             }
-            if (consecutiveCorrect >= 3 && correctDates.size >= 3) {
-                isGraduated = true;
-            }
+            if (consecutiveCorrect >= 3 && correctDates.size >= 3) { isGraduated = true; }
         }
         if (isGraduated) return { text: "已達標", badge: "🟣", classColor:"dot-purple", isGraduated: true, accuracy: null, total: total };
 
-        // 2. 擷取最新 5 次
         const recentRecords = records.slice(-5);
         const recentTotal = recentRecords.length;
 
@@ -428,10 +445,7 @@
         else return { text: "精通", badge: "🟢", classColor:"dot-green", isGraduated: false, accuracy: accuracy, total: total };
     }
 
-    // ================= 自訂下拉複選選單邏輯 =================
-    function toggleDropdown() {
-        document.getElementById('lesson-dropdown').classList.toggle('visible');
-    }
+    function toggleDropdown() { document.getElementById('lesson-dropdown').classList.toggle('visible'); }
 
     function renderLessonSelect() {
         const lessons = []; const seen = new Set();
@@ -462,13 +476,9 @@
         const anchor = document.getElementById('lesson-dropdown').querySelector('.anchor');
         document.getElementById('chk-all').checked = (checkboxes.length === checkedBoxes.length && checkboxes.length > 0);
         
-        if (checkedBoxes.length === checkboxes.length && checkboxes.length > 0) {
-            anchor.innerText = "選擇單元 (已全選) ▼";
-        } else if (checkedBoxes.length === 0) {
-            anchor.innerText = "選擇單元 (未選擇) ▼";
-        } else {
-            anchor.innerText = `選擇單元 (已選 ${checkedBoxes.length} 個) ▼`;
-        }
+        if (checkedBoxes.length === checkboxes.length && checkboxes.length > 0) anchor.innerText = "選擇單元 (已全選) ▼";
+        else if (checkedBoxes.length === 0) anchor.innerText = "選擇單元 (未選擇) ▼";
+        else anchor.innerText = `選擇單元 (已選 ${checkedBoxes.length} 個) ▼`;
     }
 
     function updateActivePool() {
@@ -486,7 +496,6 @@
         document.getElementById('q1-start-btn').innerText = startText; document.getElementById('q1-start-btn').disabled = (eligiblePool.length === 0);
         document.getElementById('q2-start-btn').innerText = startText; document.getElementById('q2-start-btn').disabled = (eligiblePool.length === 0);
     }
-    // =======================================================
 
     function renderWordList() {
         const tbody = document.getElementById('word-list-body');
@@ -551,9 +560,7 @@
     }
     function closeWordHistoryModal() { document.getElementById('word-history-modal').style.display = 'none'; }
 
-    // ================= 統計面板、里程碑與樂透檢查 =================
     function checkMilestonesAndLottery() {
-        // 1. 檢查里程碑
         let graduatedCount = allWords.filter(w => getWordEvaluation(w.id).isGraduated).length;
         let newMilestone = Math.floor(graduatedCount / 50);
         if (newMilestone > trackedMilestones) {
@@ -563,27 +570,17 @@
             try { localStorage.setItem(MILESTONE_KEY, trackedMilestones); } catch(e){}
         }
 
-        // 2. 檢查本週樂透
         const currentWeek = getYearWeek();
         if (lotteryState.playedWeek !== currentWeek) {
-            // 還沒玩過這週的
-            if (!lotteryState.isAvailableNow) {
-                // 每天有 30% 機率出現，或者是禮拜日必定出現
-                if (Math.random() < 0.3 || new Date().getDay() === 0) {
-                    lotteryState.isAvailableNow = true;
-                }
+            if (!lotteryState.isAvailableNow && (Math.random() < 0.3 || new Date().getDay() === 0)) {
+                lotteryState.isAvailableNow = true;
             }
-        } else {
-            lotteryState.isAvailableNow = false; // 已玩過
-        }
+        } else { lotteryState.isAvailableNow = false; }
+        
         try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
         
-        // 顯示樂透按鈕條件：isAvailableNow 且 達標單字 >= 20
-        if (lotteryState.isAvailableNow && graduatedCount >= 20) {
-            document.getElementById('btn-lottery-tab').style.display = 'inline-block';
-        } else {
-            document.getElementById('btn-lottery-tab').style.display = 'none';
-        }
+        if (lotteryState.isAvailableNow && graduatedCount >= 20) { document.getElementById('btn-lottery-tab').style.display = 'inline-block'; } 
+        else { document.getElementById('btn-lottery-tab').style.display = 'none'; }
     }
 
     function renderStats() {
@@ -612,9 +609,7 @@
 
     function renderLedgerTable() {
         const tbody = document.getElementById('ledger-body');
-        if (pointsLedger.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">尚無積分變動紀錄</td></tr>'; return;
-        }
+        if (pointsLedger.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">尚無積分變動紀錄</td></tr>'; return; }
         tbody.innerHTML = pointsLedger.map(entry => {
             let color = entry.points > 0 ? "var(--success)" : (entry.points < 0 ? "var(--danger)" : "#64748b");
             let sign = entry.points > 0 ? "+" : "";
@@ -644,12 +639,10 @@
         const els = document.querySelectorAll('.admin-only');
         els.forEach(el => { el.style.display = isAdminLoggedIn ? (el.tagName === 'TH' || el.tagName === 'TD' ? 'table-cell' : 'block') : 'none'; });
     }
-    // ==========================================================
 
     function speak(text, rate = 0.9) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
+            window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US'; utterance.rate = rate; window.speechSynthesis.speak(utterance);
         }
     }
@@ -660,13 +653,11 @@
 
         let totalWeight = 0; 
         const weights = eligiblePool.map(w => {
-            const evalText = getWordEvaluation(w.id).text;
-            let weight = 10; 
+            const evalText = getWordEvaluation(w.id).text; let weight = 10; 
             if (evalText === "不大熟" || evalText === "待評比") weight = 50; 
             else if (evalText === "熟") weight = 10; 
             else if (evalText === "精通") weight = 2;  
-            totalWeight += weight;
-            return weight;
+            totalWeight += weight; return weight;
         });
 
         let randomNum = Math.random() * totalWeight;
@@ -677,7 +668,6 @@
         return eligiblePool[eligiblePool.length - 1];
     }
 
-    // ================= 測驗與樂透流程 =================
     function startSession(mode) {
         if (activePool.length === 0) return;
         const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
@@ -705,18 +695,16 @@
         let gradWords = allWords.filter(w => getWordEvaluation(w.id).isGraduated);
         if (gradWords.length < 20) return alert("達標字庫不足 20 個，無法開啟樂透！");
 
-        // 將達標單字加上測試次數並排序
         let gradWithCounts = gradWords.map(w => ({ word: w, count: (wordSpecificHistory[w.id] || []).length }));
         gradWithCounts.sort((a,b) => a.count - b.count);
 
-        // 10個最少的 + 10個從剩下的隨機抽
         let leastTested = gradWithCounts.slice(0, 10).map(i => i.word);
         let remaining = gradWithCounts.slice(10).map(i => i.word);
         remaining.sort(() => Math.random() - 0.5);
         let random10 = remaining.slice(0, 10);
         
         let lotteryQuestions = [...leastTested, ...random10];
-        lotteryQuestions.sort(() => Math.random() - 0.5); // 打亂最終20題順序
+        lotteryQuestions.sort(() => Math.random() - 0.5); 
 
         currentSession.mode = 'l'; currentSession.currentIndex = 0; currentSession.questions = lotteryQuestions;
         currentSession.userAnswers = new Array(20).fill("");
@@ -849,13 +837,11 @@
         let reportHtml = `<h2>🎁 樂透挑戰結算</h2><p>20 題中答對了 <strong style="color:var(--lottery); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
         currentSession.questions.forEach((wordObj, i) => {
-            const userAns = currentSession.userAnswers[i].toLowerCase();
-            let isCorrect = (userAns === wordObj.word.toLowerCase());
+            const userAns = currentSession.userAnswers[i].toLowerCase(); let isCorrect = (userAns === wordObj.word.toLowerCase());
             if (isCorrect) { correctCount++; reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`; } 
             else { reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">答案: ${currentSession.userAnswers[i]||'空'} → 正確: ${wordObj.word}</span></div>`; }
         });
 
-        // 樂透結果判定
         if (correctCount === 20) {
             addLedgerEntry("本週突發樂透挑戰 20 題全對", 1);
             reportHtml = `<h2 style="color:var(--lottery);">🎉 恭喜中獎！🎉</h2><p>太強了！20 題全對，已將 1 點積分存入帳本！</p>` + reportHtml;
@@ -864,14 +850,11 @@
         }
         reportHtml += `</div><br><button class="btn-submit" onclick="switchTab('list-tab')">返回清單</button>`;
         
-        // 關閉本週樂透
-        lotteryState.playedWeek = getYearWeek();
-        lotteryState.isAvailableNow = false;
+        lotteryState.playedWeek = getYearWeek(); lotteryState.isAvailableNow = false;
         try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
         document.getElementById('btn-lottery-tab').style.display = 'none';
 
-        renderStats();
-        document.getElementById('ql-play-screen').style.display = 'none';
+        renderStats(); document.getElementById('ql-play-screen').style.display = 'none';
         const resScr = document.getElementById('ql-result-screen');
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
     }
