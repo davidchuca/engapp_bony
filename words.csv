@@ -38,7 +38,7 @@ aa,6,Black,sheet,床單,1
 aa,6,Black,tie,領結,1
 aa,6,Black,stage,舞台,1
 aa,6,Black,wand,魔法棒,1
-aa,6,Black,rabbit,免子,1
+aa,6,Black,rabbit,兔子(r),1
 aa,7,Blue,bench,長椅,1
 aa,7,Blue,bike,腳踏車,1
 aa,7,Blue,blue,藍色,1
@@ -55,7 +55,7 @@ aa,8,The Book,page,頁,1
 aa,8,The Book,word,單字,1
 aa,8,The Book,letter,字母,1
 aa,8,The Book,page number,頁數,1
-aa,9,The Book store,door,門,1
+aa,9,The Book store,door,門(d),1
 aa,9,The Book store,room,空間,1
 aa,9,The Book store,helpers,服務員,1
 aa,9,The Book store,chair,椅子,1
@@ -76,14 +76,14 @@ aa,11,Christmas Eve,card,卡片,1
 aa,11,Christmas Eve,present,禮物(p),1
 aa,11,Christmas Eve,stocking,長筒襪,1
 aa,11,Christmas Eve,cookies,餅乾,1
-aa,12,City Street,taxi,計程車,1
+aa,12,City Street,taxi,計程車(t),1
 aa,12,City Street,bus,巴士,1
 aa,12,City Street,people,人,1
 aa,12,City Street,street,街道,1
 aa,12,City Street,building,建築物,1
 aa,12,City Street,food,食物,1
 aa,12,City Street,sidewalk,人行道,1
-aa,12,City Street,steps,階梯,1
+aa,12,City Street,steps,階梯(戶外),1
 aa,13,The City,car,車,1
 aa,13,The City,bus,巴士,1
 aa,13,The City,store,商店,1
@@ -185,7 +185,7 @@ aa,25,Green,lizard,蜥蜴,1
 aa,25,Green,forest,森林,1
 aa,26,In,grass,草,1
 aa,26,In,mud,泥漿,1
-aa,26,In,bathtub,浴缸,1
+aa,26,In,bathtub,浴缸(b),1
 aa,27,It is fall,leaf,葉子,1
 aa,27,It is fall,apple,蘋果,1
 aa,27,It is fall,acorn,橡子,1
@@ -217,7 +217,7 @@ aa,30,Lunch at School,carrot,紅蘿蔔,1
 aa,30,Lunch at School,cookie,餅乾,1
 aa,30,Lunch at School,napkin,餐巾,1
 aa,30,Lunch at School,lunch,午餐,1
-aa,31,My bath,tub,浴缸,1
+aa,31,My bath,tub,浴缸(t),1
 aa,31,My bath,water,水,1
 aa,31,My bath,bubble,泡泡,1
 aa,31,My bath,toy,玩具,1
@@ -272,7 +272,7 @@ aa,37,My Hanukkah,cookie,餅乾,1
 aa,38,My school bus,walk,走,1
 aa,38,My school bus,bench,長椅,1
 aa,38,My school bus,bus,巴士,1
-aa,38,My school bus,door,門,1
+aa,38,My school bus,door,門(d),1
 aa,38,My school bus,step,台階,1
 aa,38,My school bus,seat,座位,1
 aa,38,My school bus,window,窗戶,1
@@ -324,7 +324,7 @@ aa,45,Out,house,房子,1
 aa,45,Out,water,水,1
 aa,45,Out,grass,草,1
 aa,45,Out,mud,泥漿,1
-aa,45,Out,bathtub,浴缸,1
+aa,45,Out,bathtub,浴缸(b),1
 aa,46,Over,log,木材,1
 aa,46,Over,pot,罐壺,1
 aa,46,Over,hole,洞,1
@@ -342,7 +342,7 @@ aa,47,Pasta,curly,捲的,1
 aa,48,Pets,pet,竉物,1
 aa,48,Pets,cat,貓,1
 aa,48,Pets,dog,狗,1
-aa,48,Pets,bunny,免子,1
+aa,48,Pets,bunny,兔子(b),1
 aa,48,Pets,bird,鳥,1
 aa,48,Pets,goldfish,金魚,1
 aa,48,Pets,mouse,老鼠,1
@@ -430,7 +430,7 @@ aa,59,Spring,bird,鳥,1
 aa,59,Spring,flower,花,1
 aa,59,Spring,rain,雨,1
 aa,59,Spring,rainbow,彩虹,1
-aa,59,Spring,bunny,兔子,1
+aa,59,Spring,bunny,兔子(b),1
 aa,59,Spring,spring,春天,1
 aa,60,Summer Camp,summer,夏天,1
 aa,60,Summer Camp,camp,露營,1
@@ -484,7 +484,7 @@ aa,66,The Plant,seed,種子,1
 aa,66,The Plant,rain,雨,1
 aa,66,The Plant,sunshine,陽光,1
 aa,66,The Plant,plant,植物,1
-aa,67,The Playground,gate,門,1
+aa,67,The Playground,gate,門(g),1
 aa,67,The Playground,swing,鞦韆,1
 aa,67,The Playground,slide,溜滑梯,1
 aa,67,The Playground,sandbox,沙坑,1
@@ -500,7 +500,7 @@ aa,68,The School,lunchroom,午餐室,1
 aa,68,The School,library,圖書館,1
 aa,68,The School,gym,健身房,1
 aa,68,The School,playground,遊樂場,1
-aa,69,The Street,gate,門,1
+aa,69,The Street,gate,門(g),1
 aa,69,The Street,mailbox,信箱,1
 aa,69,The Street,sidewalk,人行道,1
 aa,69,The Street,fence,籬笆,1
@@ -509,13 +509,13 @@ aa,69,The Street,bike,腳踏車,1
 aa,69,The Street,friend,朋友,1
 aa,69,The Street,street,街道,1
 aa,70,The Subway,subway,地下鐵,1
-aa,70,The Subway,stair,階梯,1
+aa,70,The Subway,stair,階梯(室內),1
 aa,70,The Subway,ticket,票,1
-aa,70,The Subway,gate,門,1
+aa,70,The Subway,gate,門(g),1
 aa,70,The Subway,people,人,1
 aa,70,The Subway,time,時間,1
 aa,70,The Subway,tunnel,隧道,1
-aa,70,The Subway,door,門,1
+aa,70,The Subway,door,門(d),1
 aa,71,The supermarket,supermarket,超級市場,1
 aa,71,The supermarket,cart,推車,1
 aa,71,The supermarket,fruit,水果,1
@@ -568,7 +568,7 @@ aa,76,Too Many Sweets,belly,肚子,1
 aa,76,Too Many Sweets,sweet,甜食,1
 aa,77,Toys,block,積木,1
 aa,77,Toys,bear,熊,1
-aa,77,Toys,paint,畫,1
+aa,77,Toys,paint,畫(p),1
 aa,77,Toys,drum,鼓,1
 aa,77,Toys,wagon,手拉車,1
 aa,77,Toys,kite,風箏,1
@@ -598,12 +598,12 @@ aa,82,Water,river,河,1
 aa,82,Water,snow,雪,1
 aa,82,Water,ice,冰,1
 aa,82,Water,water,水,1
-aa,83,We Build,draw,畫,1
+aa,83,We Build,draw,畫(d),1
 aa,83,We Build,saw,鋸,1
 aa,83,We Build,sand,打磨/沙,1
 aa,83,We Build,hammer,敲/鐵鎚,1
 aa,83,We Build,drill,鑽,1
-aa,83,We Build,paint,畫,1
+aa,83,We Build,paint,畫(p),1
 aa,83,We Build,glue,黏/膠水,1
 aa,83,We Build,hang,掛,1
 aa,84,We Go Camping,drive,開車,1
@@ -627,7 +627,7 @@ aa,86,Winter,snowman,雪人,1
 aa,86,Winter,mittens,連指手套,1
 aa,86,Winter,coat,大衣,1
 aa,86,Winter,fire,火,1
-aa,87,Yellow,cab,計程車,1
+aa,87,Yellow,cab,計程車(c),1
 aa,87,Yellow,sign,訊號,1
 aa,87,Yellow,truck,卡車,1
 aa,87,Yellow,vest,背心,1
