@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字智慧測驗系統 - 終極保險版</title>
+    <title>英文單字智慧測驗系統 - 終極報表與保險版</title>
+    <!-- 引入 CSV 解析套件 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- 引入 Excel 匯出套件 (SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
     <style>
         :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; --graduated: #8b5cf6; --lottery: #ec4899; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: var(--background); color: #333; margin: 0; padding: 20px; }
@@ -255,7 +259,7 @@
 
         <!-- 管理員密碼控制區 (包含積分帳本與備份還原) -->
         <div class="admin-card">
-            <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (備份、積分與設定)</h3>
+            <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (備份、報表與設定)</h3>
             <div id="admin-login-area">
                 <input type="password" id="admin-pwd" class="input-answer" style="font-size: 16px; padding: 5px; width: 60%; max-width: 200px; margin-bottom:0;" placeholder="請輸入密碼">
                 <button class="btn-submit" style="background: #b91c1c; padding: 6px 15px; font-size: 16px;" onclick="loginAdmin()">驗證登入</button>
@@ -264,13 +268,20 @@
             <div id="admin-controls-area" style="display:none; margin-top: 15px;">
                 <p style="color:#16a34a; font-weight:bold; margin-top:0;">🔓 驗證成功！已解鎖單字清單的「個別紀錄」與下列管理功能。</p>
                 
-                <!-- 新增：資料備份與還原功能 -->
+                <!-- 【Excel 報表匯出功能】 -->
+                <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #10b981; margin-bottom: 15px;">
+                    <label style="font-weight:bold; color: #047857;">📈 匯出 Excel 報表 (人眼閱讀與分析專用)</label>
+                    <p style="font-size: 13px; color: #475569; margin-top: 5px; margin-bottom: 10px;">將系統內的數據整理成多頁籤的 Excel 檔案，包含單字總表、測驗歷史與積分帳本，方便您閱讀與列印。</p>
+                    <button class="btn-submit" style="background: #10b981; padding: 6px 15px; font-size: 14px;" onclick="exportExcel()">📊 下載 Excel 報表 (.xlsx)</button>
+                </div>
+
+                <!-- 系統資料備份與還原功能 -->
                 <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #3b82f6; margin-bottom: 15px;">
-                    <label style="font-weight:bold; color: #1e3a8a;">💾 資料備份與還原 (防重置護身符)</label>
-                    <p style="font-size: 13px; color: #475569; margin-top: 5px; margin-bottom: 10px;">強烈建議定期匯出備份檔案。若不慎清除瀏覽器快取或更換手機，可透過匯入功能瞬間還原所有單字熟練度與積分。</p>
-                    <button class="btn-submit" style="background: #3b82f6; padding: 6px 15px; font-size: 14px; margin-right: 10px;" onclick="exportData()">⬇️ 匯出備份檔 (.json)</button>
-                    <label class="btn-submit" style="background: #10b981; padding: 6px 15px; font-size: 14px; cursor: pointer;">
-                        ⬆️ 匯入備份檔
+                    <label style="font-weight:bold; color: #1e3a8a;">💾 系統資料備份與還原 (.json)</label>
+                    <p style="font-size: 13px; color: #475569; margin-top: 5px; margin-bottom: 10px;">強烈建議定期匯出 JSON 備份檔案。若不慎清除瀏覽器快取或跨裝置(如iPad)，可透過匯入此檔案瞬間無損還原所有紀錄。</p>
+                    <button class="btn-submit" style="background: #3b82f6; padding: 6px 15px; font-size: 14px; margin-right: 10px;" onclick="exportData()">⬇️ 下載系統備份檔</button>
+                    <label class="btn-submit" style="background: #6366f1; padding: 6px 15px; font-size: 14px; cursor: pointer;">
+                        ⬆️ 匯入備份檔還原
                         <input type="file" accept=".json" style="display: none;" onchange="importData(event)">
                     </label>
                 </div>
@@ -341,7 +352,7 @@
             trackedMilestones = parseInt(localStorage.getItem(MILESTONE_KEY)) || 0;
             lotteryState = JSON.parse(localStorage.getItem(LOTTERY_KEY)) || lotteryState;
 
-            // 舊版資料無縫轉移處理
+            // 確保舊版資料無縫轉移處理
             let needsSave = false;
             let newSpecificHistory = {};
             for (let key in wordSpecificHistory) {
@@ -353,7 +364,6 @@
                     newKey = key.toLowerCase().trim();
                     if(newKey !== key) needsSave = true;
                 }
-                
                 if (!newSpecificHistory[newKey]) { newSpecificHistory[newKey] = wordSpecificHistory[key]; } 
                 else { newSpecificHistory[newKey] = newSpecificHistory[newKey].concat(wordSpecificHistory[key]); }
             }
@@ -547,7 +557,56 @@
     }
     function closeWordHistoryModal() { document.getElementById('word-history-modal').style.display = 'none'; }
 
-    // ================= 備份與還原系統 =================
+    // ================= 【匯出 Excel 報表】 =================
+    function exportExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert("無法載入 Excel 套件，請檢查網路連線。");
+            return;
+        }
+
+        let overviewData = allWords.map(w => {
+            const evalObj = getWordEvaluation(w.id);
+            return {
+                "課別/單元": "L" + w.lesson + " (" + w.title + ")",
+                "英文單字": w.word,
+                "中文解釋": w.translation,
+                "熟練度": evalObj.text,
+                "近期正確率": evalObj.accuracy !== null ? evalObj.accuracy + "%" : "無",
+                "總測驗次數": evalObj.total
+            };
+        });
+
+        let detailData = [];
+        for (let wordId in wordSpecificHistory) {
+            let records = wordSpecificHistory[wordId];
+            let wordObj = allWords.find(w => w.id === wordId);
+            let displayWord = wordObj ? wordObj.word : wordId;
+            records.forEach(r => {
+                detailData.push({
+                    "測驗時間": r.date,
+                    "英文單字": displayWord,
+                    "測試結果": r.isCorrect ? "⭕ 正確" : "❌ 錯誤",
+                    "學生作答": r.userAnswer || "(未填寫)"
+                });
+            });
+        }
+        detailData.sort((a, b) => b["測驗時間"].localeCompare(a["測驗時間"]));
+
+        let ledgerData = pointsLedger.map(entry => ({
+            "時間": entry.date,
+            "獲得原因": entry.reason,
+            "點數變動": entry.points > 0 ? "+" + entry.points : entry.points
+        }));
+
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(overviewData), "單字總表");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailData), "詳細測驗歷史");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ledgerData), "積分帳本");
+
+        XLSX.writeFile(wb, "英文單字學習報表_" + new Date().toISOString().split('T')[0] + ".xlsx");
+    }
+
+    // ================= 備份與還原系統 (iPad/iOS 友善版) =================
     function exportData() {
         const backupData = {
             quiz1History: quiz1History,
@@ -557,11 +616,17 @@
             trackedMilestones: trackedMilestones,
             lotteryState: lotteryState
         };
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+        const jsonString = JSON.stringify(backupData);
+        const blob = new Blob([jsonString], { type: "application/json" });
+        const url = window.URL.createObjectURL(blob);
+        
         const dlAnchorElem = document.createElement('a');
-        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("href", url);
         dlAnchorElem.setAttribute("download", "Vocab_Backup_" + new Date().getTime() + ".json");
+        document.body.appendChild(dlAnchorElem);
         dlAnchorElem.click();
+        document.body.removeChild(dlAnchorElem);
+        window.URL.revokeObjectURL(url);
     }
 
     function importData(event) {
