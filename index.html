@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文單字智慧測驗系統 - 終極遊戲化版</title>
+    <title>英文單字智慧測驗系統 - 終極保險版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
         :root { --primary: #4a90e2; --success: #2ec4b6; --danger: #e71d36; --background: #f8f9fa; --warning: #f59e0b; --graduated: #8b5cf6; --lottery: #ec4899; }
@@ -14,7 +14,6 @@
         .tab-btn { padding: 10px 20px; border: none; background: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; transition: all 0.2s; }
         .tab-btn.active { background: var(--primary); color: white; }
         
-        /* 樂透專屬按鈕特效 */
         .tab-btn-lottery { background: var(--lottery); color: white; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
         
@@ -23,7 +22,6 @@
         
         .filter-section { background: #edf2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
         
-        /* 自訂下拉複選選單樣式 */
         .dropdown-check-list { display: inline-block; position: relative; width: 100%; max-width: 350px; text-align: left; }
         .dropdown-check-list .anchor { width: 100%; position: relative; cursor: pointer; display: inline-block; padding: 10px 15px; border: 2px solid #cbd5e1; border-radius: 6px; background: white; font-weight: bold; box-sizing: border-box; }
         .dropdown-check-list .items { padding: 10px; display: none; margin: 0; border: 2px solid #cbd5e1; border-top: none; background: white; position: absolute; top: 100%; left: 0; width: 100%; z-index: 10; max-height: 250px; overflow-y: auto; border-radius: 0 0 6px 6px; box-sizing: border-box; }
@@ -82,7 +80,6 @@
         .rules-card { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 20px; margin-top: 20px; }
         .admin-card { background: #fee2e2; border: 1px solid #fca5a5; border-radius: 10px; padding: 20px; margin-top: 20px; }
         
-        /* 帳本表格 */
         .ledger-table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; font-size: 14px; }
         .ledger-table th, .ledger-table td { border: 1px solid #fca5a5; padding: 8px; text-align: left; }
         .ledger-table th { background: #fef2f2; color: #991b1b; }
@@ -112,6 +109,7 @@
         <hr>
     </div>
 
+    <!-- ================= 單字瀏覽頁面 ================= -->
     <div id="list-tab" class="panel active">
         <h2>單字清單</h2>
         <table class="word-table">
@@ -131,6 +129,7 @@
         </table>
     </div>
 
+    <!-- ================= 中翻英填空 ================= -->
     <div id="quiz1-tab" class="panel">
         <h2>模式 1：中翻英填空 (10題智慧賽)</h2>
         <div class="admin-only" style="text-align: right; margin-bottom: 15px;">
@@ -162,6 +161,7 @@
         </div>
     </div>
 
+    <!-- ================= 英翻中選擇 ================= -->
     <div id="quiz2-tab" class="panel">
         <h2>模式 2：英翻中選擇 (10題智慧賽)</h2>
         <div class="quiz-container">
@@ -184,6 +184,7 @@
         </div>
     </div>
 
+    <!-- ================= 突發樂透挑戰 ================= -->
     <div id="lottery-tab" class="panel">
         <h2 style="color: var(--lottery);">🎁 本週驚喜：樂透挑戰賽 🎁</h2>
         <div class="rules-card" style="text-align: left; background: #fdf2f8; border-color: #fbcfe8;">
@@ -212,6 +213,7 @@
         </div>
     </div>
 
+    <!-- ================= 統計與積分頁面 ================= -->
     <div id="stats-tab" class="panel">
         <h2>📊 學習進度與積分面板</h2>
         
@@ -251,8 +253,9 @@
             </ul>
         </div>
 
+        <!-- 管理員密碼控制區 (包含積分帳本與備份還原) -->
         <div class="admin-card">
-            <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (積分帳本與設定)</h3>
+            <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (備份、積分與設定)</h3>
             <div id="admin-login-area">
                 <input type="password" id="admin-pwd" class="input-answer" style="font-size: 16px; padding: 5px; width: 60%; max-width: 200px; margin-bottom:0;" placeholder="請輸入密碼">
                 <button class="btn-submit" style="background: #b91c1c; padding: 6px 15px; font-size: 16px;" onclick="loginAdmin()">驗證登入</button>
@@ -261,6 +264,17 @@
             <div id="admin-controls-area" style="display:none; margin-top: 15px;">
                 <p style="color:#16a34a; font-weight:bold; margin-top:0;">🔓 驗證成功！已解鎖單字清單的「個別紀錄」與下列管理功能。</p>
                 
+                <!-- 新增：資料備份與還原功能 -->
+                <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #3b82f6; margin-bottom: 15px;">
+                    <label style="font-weight:bold; color: #1e3a8a;">💾 資料備份與還原 (防重置護身符)</label>
+                    <p style="font-size: 13px; color: #475569; margin-top: 5px; margin-bottom: 10px;">強烈建議定期匯出備份檔案。若不慎清除瀏覽器快取或更換手機，可透過匯入功能瞬間還原所有單字熟練度與積分。</p>
+                    <button class="btn-submit" style="background: #3b82f6; padding: 6px 15px; font-size: 14px; margin-right: 10px;" onclick="exportData()">⬇️ 匯出備份檔 (.json)</button>
+                    <label class="btn-submit" style="background: #10b981; padding: 6px 15px; font-size: 14px; cursor: pointer;">
+                        ⬆️ 匯入備份檔
+                        <input type="file" accept=".json" style="display: none;" onchange="importData(event)">
+                    </label>
+                </div>
+
                 <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #fca5a5; margin-bottom: 15px;">
                     <label style="font-weight:bold; color: #7f1d1d;">手動增減積分：</label>
                     <input type="number" id="admin-new-points" class="input-answer" style="font-size: 16px; padding: 5px; width: 80px; margin-bottom:0;" placeholder="點數">
@@ -280,6 +294,7 @@
     </div>
 </div>
 
+<!-- 個別單字紀錄彈出視窗 -->
 <div id="word-history-modal" class="modal-overlay">
     <div class="modal-content">
         <button class="close-btn" onclick="closeWordHistoryModal()">✖</button>
@@ -306,13 +321,11 @@
     let currentSession = { mode: 1, questions: [], userAnswers: [], optionsData: [], currentIndex: 0 };
     let isAdminLoggedIn = false;
 
-    // 積分與任務資料結構
     let pointsLedger = [];
     let trackedMilestones = 0;
     let streakData = { currentStreak: 0, lastCompletedDate: "", todayProgress: { date: "", mode1Done: false, mode2Done: false } };
     let lotteryState = { playedWeek: '', isAvailableNow: false };
 
-    // 取得當前的 ISO 週數 (年份-W週數)
     function getYearWeek() {
         let d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
         let w1 = new Date(d.getFullYear(), 0, 4);
@@ -327,9 +340,29 @@
             pointsLedger = JSON.parse(localStorage.getItem(LEDGER_KEY)) || [];
             trackedMilestones = parseInt(localStorage.getItem(MILESTONE_KEY)) || 0;
             lotteryState = JSON.parse(localStorage.getItem(LOTTERY_KEY)) || lotteryState;
+
+            // 舊版資料無縫轉移處理
+            let needsSave = false;
+            let newSpecificHistory = {};
+            for (let key in wordSpecificHistory) {
+                let newKey = key;
+                if (key.includes('_')) {
+                    newKey = key.split('_').slice(1).join('_').toLowerCase().trim();
+                    needsSave = true;
+                } else {
+                    newKey = key.toLowerCase().trim();
+                    if(newKey !== key) needsSave = true;
+                }
+                
+                if (!newSpecificHistory[newKey]) { newSpecificHistory[newKey] = wordSpecificHistory[key]; } 
+                else { newSpecificHistory[newKey] = newSpecificHistory[newKey].concat(wordSpecificHistory[key]); }
+            }
+            if (needsSave) {
+                wordSpecificHistory = newSpecificHistory;
+                localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory));
+            }
         } catch(e) {}
 
-        // 下拉選單點擊外部關閉邏輯
         document.addEventListener('click', function(event) {
             const dropdown = document.getElementById('lesson-dropdown');
             if (dropdown && !dropdown.contains(event.target)) dropdown.classList.remove('visible');
@@ -360,61 +393,45 @@
             const keyTrans = keys.find(k => k.toLowerCase().includes('translation') || k.toLowerCase().includes('trans'));
 
             if (keyWord && keyTrans && row[keyWord] && row[keyTrans]) {
-                allWords.push({
-                    lesson: keyLesson && row[keyLesson] ? String(row[keyLesson]).trim() : '1',
-                    title: keyTitle && row[keyTitle] ? String(row[keyTitle]).trim() : '未分類',
-                    word: String(row[keyWord]).trim(),
-                    translation: String(row[keyTrans]).trim(),
-                    id: `${row[keyLesson]}_${row[keyWord]}`
-                });
+                let cleanLesson = keyLesson && row[keyLesson] ? String(row[keyLesson]).trim() : '1';
+                let cleanTitle = keyTitle && row[keyTitle] ? String(row[keyTitle]).trim() : '未分類';
+                let cleanWord = String(row[keyWord]).trim();
+                let cleanTrans = String(row[keyTrans]).trim();
+                let wordId = cleanWord.toLowerCase(); // 強制使用純單字作 ID
+
+                allWords.push({ lesson: cleanLesson, title: cleanTitle, word: cleanWord, translation: cleanTrans, id: wordId });
             }
         });
 
         if (allWords.length === 0) { document.getElementById('lesson-dropdown').querySelector('.anchor').innerText = `❌ 單字庫為空`; return; }
 
-        renderLessonSelect(); 
-        updateActivePool(); // 預設全選
-        checkMilestonesAndLottery();
-        renderStats();
+        renderLessonSelect(); updateActivePool(); checkMilestonesAndLottery(); renderStats();
     }
     
     function saveWordSpecificHistory() { try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {} }
     function saveStreakData() { try { localStorage.setItem(STREAK_KEY, JSON.stringify(streakData)); } catch(e) {} }
     
-    // 將新積分寫入帳本
     function addLedgerEntry(reason, points) {
         pointsLedger.unshift({ date: new Date().toLocaleString('zh-TW'), reason: reason, points: points });
         try { localStorage.setItem(LEDGER_KEY, JSON.stringify(pointsLedger)); } catch(e) {}
     }
+    function getTotalPoints() { return pointsLedger.reduce((sum, entry) => sum + entry.points, 0); }
 
-    // 計算總積分
-    function getTotalPoints() {
-        return pointsLedger.reduce((sum, entry) => sum + entry.points, 0);
-    }
-
-    // 【核心邏輯】：滾動計算最新 5 次正確率與燈號
     function getWordEvaluation(wordId) {
         const records = wordSpecificHistory[wordId] || [];
         const total = records.length;
         
-        // 1. 紫燈判斷：最後 3 次全對且跨 3 天
         let isGraduated = false;
         if (total >= 3) {
-            let consecutiveCorrect = 0;
-            let correctDates = new Set();
+            let consecutiveCorrect = 0; let correctDates = new Set();
             for (let i = total - 1; i >= 0; i--) {
-                if (records[i].isCorrect) {
-                    consecutiveCorrect++;
-                    correctDates.add(records[i].date.split(/[ ,]+/)[0]);
-                } else { break; }
+                if (records[i].isCorrect) { consecutiveCorrect++; correctDates.add(records[i].date.split(/[ ,]+/)[0]); } 
+                else { break; }
             }
-            if (consecutiveCorrect >= 3 && correctDates.size >= 3) {
-                isGraduated = true;
-            }
+            if (consecutiveCorrect >= 3 && correctDates.size >= 3) { isGraduated = true; }
         }
         if (isGraduated) return { text: "已達標", badge: "🟣", classColor:"dot-purple", isGraduated: true, accuracy: null, total: total };
 
-        // 2. 擷取最新 5 次
         const recentRecords = records.slice(-5);
         const recentTotal = recentRecords.length;
 
@@ -428,10 +445,7 @@
         else return { text: "精通", badge: "🟢", classColor:"dot-green", isGraduated: false, accuracy: accuracy, total: total };
     }
 
-    // ================= 自訂下拉複選選單邏輯 =================
-    function toggleDropdown() {
-        document.getElementById('lesson-dropdown').classList.toggle('visible');
-    }
+    function toggleDropdown() { document.getElementById('lesson-dropdown').classList.toggle('visible'); }
 
     function renderLessonSelect() {
         const lessons = []; const seen = new Set();
@@ -443,17 +457,13 @@
 
         const ul = document.getElementById('lesson-checkbox-list');
         let html = `<li><label><input type="checkbox" id="chk-all" checked onchange="toggleAllLessons(this)"> <strong>🌟 全部單元</strong></label></li>`;
-        lessons.forEach(l => {
-            html += `<li><label><input type="checkbox" class="chk-lesson" value="${l.id}" checked onchange="updateActivePool()"> Lesson ${l.id} (${l.title})</label></li>`;
-        });
-        ul.innerHTML = html;
-        updateDropdownAnchorText();
+        lessons.forEach(l => { html += `<li><label><input type="checkbox" class="chk-lesson" value="${l.id}" checked onchange="updateActivePool()"> Lesson ${l.id} (${l.title})</label></li>`; });
+        ul.innerHTML = html; updateDropdownAnchorText();
     }
 
     function toggleAllLessons(source) {
         const checkboxes = document.querySelectorAll('.chk-lesson');
-        checkboxes.forEach(cb => cb.checked = source.checked);
-        updateActivePool();
+        checkboxes.forEach(cb => cb.checked = source.checked); updateActivePool();
     }
 
     function updateDropdownAnchorText() {
@@ -462,13 +472,9 @@
         const anchor = document.getElementById('lesson-dropdown').querySelector('.anchor');
         document.getElementById('chk-all').checked = (checkboxes.length === checkedBoxes.length && checkboxes.length > 0);
         
-        if (checkedBoxes.length === checkboxes.length && checkboxes.length > 0) {
-            anchor.innerText = "選擇單元 (已全選) ▼";
-        } else if (checkedBoxes.length === 0) {
-            anchor.innerText = "選擇單元 (未選擇) ▼";
-        } else {
-            anchor.innerText = `選擇單元 (已選 ${checkedBoxes.length} 個) ▼`;
-        }
+        if (checkedBoxes.length === checkboxes.length && checkboxes.length > 0) { anchor.innerText = "選擇單元 (已全選) ▼"; } 
+        else if (checkedBoxes.length === 0) { anchor.innerText = "選擇單元 (未選擇) ▼"; } 
+        else { anchor.innerText = `選擇單元 (已選 ${checkedBoxes.length} 個) ▼`; }
     }
 
     function updateActivePool() {
@@ -482,11 +488,9 @@
         
         const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
         const startText = eligiblePool.length > 0 ? "開始 10 題測試" : "🎉 勾選範圍皆已達標！";
-        
         document.getElementById('q1-start-btn').innerText = startText; document.getElementById('q1-start-btn').disabled = (eligiblePool.length === 0);
         document.getElementById('q2-start-btn').innerText = startText; document.getElementById('q2-start-btn').disabled = (eligiblePool.length === 0);
     }
-    // =======================================================
 
     function renderWordList() {
         const tbody = document.getElementById('word-list-body');
@@ -518,42 +522,71 @@
         
         const evalObj = getWordEvaluation(wordId);
         let evalHtml = `目前燈號評比：<span class="status-dot ${evalObj.classColor}" style="margin-left:8px;"></span> <strong>${evalObj.text}</strong>`;
-        if (evalObj.accuracy !== null) {
-            evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(滾動擷取最新 5 次正確率：${evalObj.accuracy}% / 總測驗次數：${evalObj.total} 次)</span>`;
-        } else {
-            evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(總測驗次數：${evalObj.total} 次，不足 3 次暫不評比)</span>`;
-        }
+        if (evalObj.accuracy !== null) { evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(滾動擷取最新 5 次正確率：${evalObj.accuracy}% / 總測驗次數：${evalObj.total} 次)</span>`; } 
+        else { evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(總測驗次數：${evalObj.total} 次，不足 3 次暫不評比)</span>`; }
         document.getElementById('modal-word-evaluation').innerHTML = evalHtml;
         
         const historyList = document.getElementById('modal-word-list');
         const records = wordSpecificHistory[wordId] || [];
 
-        if (records.length === 0) {
-            historyList.innerHTML = '<li style="text-align:center; color:#94a3b8; padding: 20px 0;">尚無測試紀錄。</li>';
-        } else {
+        if (records.length === 0) { historyList.innerHTML = '<li style="text-align:center; color:#94a3b8; padding: 20px 0;">尚無測試紀錄。</li>'; } 
+        else {
             let html = '';
             records.slice().reverse().forEach(record => {
-                const icon = record.isCorrect ? '⭕' : '❌';
-                const color = record.isCorrect ? 'var(--success)' : 'var(--danger)';
-                html += `<li class="word-history-item"><div>${icon} 時間：${record.date}</div>
-                        ${!record.isCorrect ? `<div style="color:${color}; font-size:13px; margin-left:24px;">作答: <strong>${record.userAnswer || '(未填寫)'}</strong></div>` : ''}</li>`;
-            });
-            historyList.innerHTML = html;
+                const icon = record.isCorrect ? '⭕' : '❌'; const color = record.isCorrect ? 'var(--success)' : 'var(--danger)';
+                html += `<li class="word-history-item"><div>${icon} 時間：${record.date}</div>${!record.isCorrect ? `<div style="color:${color}; font-size:13px; margin-left:24px;">作答: <strong>${record.userAnswer || '(未填寫)'}</strong></div>` : ''}</li>`;
+            }); historyList.innerHTML = html;
         }
 
         document.getElementById('modal-word-reset-btn').onclick = function() {
             if (confirm(`確定要清空 [ ${wordObj.word} ] 的專屬測試紀錄嗎？`)) {
-                delete wordSpecificHistory[wordId]; saveWordSpecificHistory(); openWordHistoryModal(wordId); 
-                renderWordList(); renderStats();
+                delete wordSpecificHistory[wordId]; saveWordSpecificHistory(); openWordHistoryModal(wordId); renderWordList(); renderStats();
             }
         };
         document.getElementById('word-history-modal').style.display = 'flex';
     }
     function closeWordHistoryModal() { document.getElementById('word-history-modal').style.display = 'none'; }
 
-    // ================= 統計面板、里程碑與樂透檢查 =================
+    // ================= 備份與還原系統 =================
+    function exportData() {
+        const backupData = {
+            quiz1History: quiz1History,
+            wordSpecificHistory: wordSpecificHistory,
+            streakData: streakData,
+            pointsLedger: pointsLedger,
+            trackedMilestones: trackedMilestones,
+            lotteryState: lotteryState
+        };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData));
+        const dlAnchorElem = document.createElement('a');
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", "Vocab_Backup_" + new Date().getTime() + ".json");
+        dlAnchorElem.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const backup = JSON.parse(e.target.result);
+                if (backup && backup.wordSpecificHistory) {
+                    localStorage.setItem(HISTORY_KEY, JSON.stringify(backup.quiz1History || []));
+                    localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(backup.wordSpecificHistory || {}));
+                    localStorage.setItem(STREAK_KEY, JSON.stringify(backup.streakData || {}));
+                    localStorage.setItem(LEDGER_KEY, JSON.stringify(backup.pointsLedger || []));
+                    localStorage.setItem(MILESTONE_KEY, backup.trackedMilestones || 0);
+                    localStorage.setItem(LOTTERY_KEY, JSON.stringify(backup.lotteryState || {}));
+                    alert("✅ 資料還原成功！系統將為您重新載入。");
+                    location.reload();
+                } else { alert("❌ 檔案格式錯誤，無法還原。"); }
+            } catch(err) { alert("❌ 檔案解析失敗。"); }
+        };
+        reader.readAsText(file);
+    }
+
     function checkMilestonesAndLottery() {
-        // 1. 檢查里程碑
         let graduatedCount = allWords.filter(w => getWordEvaluation(w.id).isGraduated).length;
         let newMilestone = Math.floor(graduatedCount / 50);
         if (newMilestone > trackedMilestones) {
@@ -563,27 +596,14 @@
             try { localStorage.setItem(MILESTONE_KEY, trackedMilestones); } catch(e){}
         }
 
-        // 2. 檢查本週樂透
         const currentWeek = getYearWeek();
         if (lotteryState.playedWeek !== currentWeek) {
-            // 還沒玩過這週的
-            if (!lotteryState.isAvailableNow) {
-                // 每天有 30% 機率出現，或者是禮拜日必定出現
-                if (Math.random() < 0.3 || new Date().getDay() === 0) {
-                    lotteryState.isAvailableNow = true;
-                }
-            }
-        } else {
-            lotteryState.isAvailableNow = false; // 已玩過
-        }
+            if (!lotteryState.isAvailableNow && (Math.random() < 0.3 || new Date().getDay() === 0)) { lotteryState.isAvailableNow = true; }
+        } else { lotteryState.isAvailableNow = false; }
         try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
         
-        // 顯示樂透按鈕條件：isAvailableNow 且 達標單字 >= 20
-        if (lotteryState.isAvailableNow && graduatedCount >= 20) {
-            document.getElementById('btn-lottery-tab').style.display = 'inline-block';
-        } else {
-            document.getElementById('btn-lottery-tab').style.display = 'none';
-        }
+        if (lotteryState.isAvailableNow && graduatedCount >= 20) { document.getElementById('btn-lottery-tab').style.display = 'inline-block'; } 
+        else { document.getElementById('btn-lottery-tab').style.display = 'none'; }
     }
 
     function renderStats() {
@@ -612,9 +632,7 @@
 
     function renderLedgerTable() {
         const tbody = document.getElementById('ledger-body');
-        if (pointsLedger.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">尚無積分變動紀錄</td></tr>'; return;
-        }
+        if (pointsLedger.length === 0) { tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#94a3b8;">尚無積分變動紀錄</td></tr>'; return; }
         tbody.innerHTML = pointsLedger.map(entry => {
             let color = entry.points > 0 ? "var(--success)" : (entry.points < 0 ? "var(--danger)" : "#64748b");
             let sign = entry.points > 0 ? "+" : "";
@@ -634,24 +652,16 @@
     function addAdminPoints() {
         const p = parseInt(document.getElementById('admin-new-points').value);
         if (isNaN(p)) return alert("請輸入有效數字");
-        addLedgerEntry("管理員手動調整點數", p);
-        document.getElementById('admin-new-points').value = "";
-        alert("已成功寫入積分帳本！");
-        renderStats();
+        addLedgerEntry("管理員手動調整點數", p); document.getElementById('admin-new-points').value = ""; alert("已成功寫入積分帳本！"); renderStats();
     }
 
     function refreshAdminUIElements() {
         const els = document.querySelectorAll('.admin-only');
         els.forEach(el => { el.style.display = isAdminLoggedIn ? (el.tagName === 'TH' || el.tagName === 'TD' ? 'table-cell' : 'block') : 'none'; });
     }
-    // ==========================================================
 
     function speak(text, rate = 0.9) {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US'; utterance.rate = rate; window.speechSynthesis.speak(utterance);
-        }
+        if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); const utterance = new SpeechSynthesisUtterance(text); utterance.lang = 'en-US'; utterance.rate = rate; window.speechSynthesis.speak(utterance); }
     }
 
     function getRandomWordByWeight() {
@@ -660,36 +670,27 @@
 
         let totalWeight = 0; 
         const weights = eligiblePool.map(w => {
-            const evalText = getWordEvaluation(w.id).text;
-            let weight = 10; 
+            const evalText = getWordEvaluation(w.id).text; let weight = 10; 
             if (evalText === "不大熟" || evalText === "待評比") weight = 50; 
             else if (evalText === "熟") weight = 10; 
             else if (evalText === "精通") weight = 2;  
-            totalWeight += weight;
-            return weight;
+            totalWeight += weight; return weight;
         });
 
         let randomNum = Math.random() * totalWeight;
-        for (let i = 0; i < eligiblePool.length; i++) {
-            if (randomNum < weights[i]) return eligiblePool[i];
-            randomNum -= weights[i];
-        }
+        for (let i = 0; i < eligiblePool.length; i++) { if (randomNum < weights[i]) return eligiblePool[i]; randomNum -= weights[i]; }
         return eligiblePool[eligiblePool.length - 1];
     }
 
-    // ================= 測驗與樂透流程 =================
     function startSession(mode) {
         if (activePool.length === 0) return;
         const eligiblePool = activePool.filter(w => !getWordEvaluation(w.id).isGraduated);
         if (eligiblePool.length === 0) return;
 
-        currentSession.mode = mode; currentSession.currentIndex = 0; currentSession.questions = [];
-        currentSession.userAnswers = new Array(10).fill(""); currentSession.optionsData = [];
+        currentSession.mode = mode; currentSession.currentIndex = 0; currentSession.questions = []; currentSession.userAnswers = new Array(10).fill(""); currentSession.optionsData = [];
 
         for (let i = 0; i < 10; i++) {
-            let picked = getRandomWordByWeight(); if (!picked) break; 
-            currentSession.questions.push(picked);
-            
+            let picked = getRandomWordByWeight(); if (!picked) break; currentSession.questions.push(picked);
             if (mode === 2) {
                 let opts = [picked.translation];
                 let wrongPool = allWords.filter(w => w.translation !== picked.translation).map(w => w.translation);
@@ -705,22 +706,16 @@
         let gradWords = allWords.filter(w => getWordEvaluation(w.id).isGraduated);
         if (gradWords.length < 20) return alert("達標字庫不足 20 個，無法開啟樂透！");
 
-        // 將達標單字加上測試次數並排序
         let gradWithCounts = gradWords.map(w => ({ word: w, count: (wordSpecificHistory[w.id] || []).length }));
         gradWithCounts.sort((a,b) => a.count - b.count);
 
-        // 10個最少的 + 10個從剩下的隨機抽
         let leastTested = gradWithCounts.slice(0, 10).map(i => i.word);
         let remaining = gradWithCounts.slice(10).map(i => i.word);
-        remaining.sort(() => Math.random() - 0.5);
-        let random10 = remaining.slice(0, 10);
+        remaining.sort(() => Math.random() - 0.5); let random10 = remaining.slice(0, 10);
         
-        let lotteryQuestions = [...leastTested, ...random10];
-        lotteryQuestions.sort(() => Math.random() - 0.5); // 打亂最終20題順序
+        let lotteryQuestions = [...leastTested, ...random10]; lotteryQuestions.sort(() => Math.random() - 0.5); 
 
-        currentSession.mode = 'l'; currentSession.currentIndex = 0; currentSession.questions = lotteryQuestions;
-        currentSession.userAnswers = new Array(20).fill("");
-        
+        currentSession.mode = 'l'; currentSession.currentIndex = 0; currentSession.questions = lotteryQuestions; currentSession.userAnswers = new Array(20).fill("");
         document.getElementById('ql-start-screen').style.display = 'none'; document.getElementById('ql-result-screen').style.display = 'none'; document.getElementById('ql-play-screen').style.display = 'block'; showQuestion('l');
     }
 
@@ -729,17 +724,13 @@
         document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} / ${currentSession.questions.length} 題`;
         
         if(mode !== 'l') {
-            const evalObj = getWordEvaluation(wordObj.id);
-            document.getElementById(`q${mode}-stats`).innerText = `目前燈號：${evalObj.badge} ${evalObj.text}`;
+            const evalObj = getWordEvaluation(wordObj.id); document.getElementById(`q${mode}-stats`).innerText = `目前燈號：${evalObj.badge} ${evalObj.text}`;
         }
         
         document.getElementById(`q${mode}-prev`).disabled = (idx === 0);
         const finishBtn = document.getElementById(`q${mode}-finish`);
-        if (idx === currentSession.questions.length - 1) {
-            document.getElementById(`q${mode}-next`).style.display = 'none'; if(finishBtn) finishBtn.style.display = 'inline-block';
-        } else {
-            document.getElementById(`q${mode}-next`).style.display = 'inline-block'; if(finishBtn) finishBtn.style.display = 'none';
-        }
+        if (idx === currentSession.questions.length - 1) { document.getElementById(`q${mode}-next`).style.display = 'none'; if(finishBtn) finishBtn.style.display = 'inline-block'; } 
+        else { document.getElementById(`q${mode}-next`).style.display = 'inline-block'; if(finishBtn) finishBtn.style.display = 'none'; }
 
         if (mode === 1 || mode === 'l') {
             document.getElementById(`q${mode}-question`).innerText = `請寫出英文：「 ${wordObj.translation} 」`;
@@ -849,13 +840,11 @@
         let reportHtml = `<h2>🎁 樂透挑戰結算</h2><p>20 題中答對了 <strong style="color:var(--lottery); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
         currentSession.questions.forEach((wordObj, i) => {
-            const userAns = currentSession.userAnswers[i].toLowerCase();
-            let isCorrect = (userAns === wordObj.word.toLowerCase());
+            const userAns = currentSession.userAnswers[i].toLowerCase(); let isCorrect = (userAns === wordObj.word.toLowerCase());
             if (isCorrect) { correctCount++; reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`; } 
             else { reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">答案: ${currentSession.userAnswers[i]||'空'} → 正確: ${wordObj.word}</span></div>`; }
         });
 
-        // 樂透結果判定
         if (correctCount === 20) {
             addLedgerEntry("本週突發樂透挑戰 20 題全對", 1);
             reportHtml = `<h2 style="color:var(--lottery);">🎉 恭喜中獎！🎉</h2><p>太強了！20 題全對，已將 1 點積分存入帳本！</p>` + reportHtml;
@@ -864,14 +853,11 @@
         }
         reportHtml += `</div><br><button class="btn-submit" onclick="switchTab('list-tab')">返回清單</button>`;
         
-        // 關閉本週樂透
-        lotteryState.playedWeek = getYearWeek();
-        lotteryState.isAvailableNow = false;
+        lotteryState.playedWeek = getYearWeek(); lotteryState.isAvailableNow = false;
         try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
         document.getElementById('btn-lottery-tab').style.display = 'none';
 
-        renderStats();
-        document.getElementById('ql-play-screen').style.display = 'none';
+        renderStats(); document.getElementById('ql-play-screen').style.display = 'none';
         const resScr = document.getElementById('ql-result-screen');
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
     }

@@ -29,7 +29,7 @@ aa,4,Big,dinosaur,恐龍,1
 aa,5,The Birthday Party,birthday,生日,1
 aa,5,The Birthday Party,balloon,氣球,1
 aa,5,The Birthday Party,candle,蠟蠋,1
-aa,5,The Birthday Party,gift,禮物,1
+aa,5,The Birthday Party,gift,禮物(g),1
 aa,5,The Birthday Party,guest,訪客,1
 aa,5,The Birthday Party,sing,唱歌,1
 aa,6,Black,cape ,披風,1
@@ -73,7 +73,7 @@ aa,11,Christmas Eve,meal,餐點,1
 aa,11,Christmas Eve,eggnog,蛋酒,1
 aa,11,Christmas Eve,tree,樹,1
 aa,11,Christmas Eve,card,卡片,1
-aa,11,Christmas Eve,present,禮物,1
+aa,11,Christmas Eve,present,禮物(p),1
 aa,11,Christmas Eve,stocking,長筒襪,1
 aa,11,Christmas Eve,cookies,餅乾,1
 aa,12,City Street,taxi,計程車,1
@@ -128,7 +128,7 @@ aa,18,Eleven,balloon,氣球,1
 aa,18,Eleven,hat,帽子,1
 aa,18,Eleven,pizza,比薩,1
 aa,18,Eleven,cupcake,杯子蛋糕,1
-aa,18,Eleven,present,禮物,1
+aa,18,Eleven,present,禮物(p),1
 aa,18,Eleven,candy bar,糖果棒,1
 aa,19,Farm animals,dog,狗,1
 aa,19,Farm animals,pig ,豬,1
@@ -259,14 +259,14 @@ aa,36,My Gift for Mom,bowl,碗,1
 aa,36,My Gift for Mom,box,盒子,1
 aa,36,My Gift for Mom,paper,紙,1
 aa,36,My Gift for Mom,bow,蝴蝶結,1
-aa,36,My Gift for Mom,gift,禮物,1
+aa,36,My Gift for Mom,gift,禮物(g),1
 aa,36,My Gift for Mom,smile,微笑,1
 aa,36,My Gift for Mom,hug,擁抱,1
 aa,37,My Hanukkah,family,家庭,1
 aa,37,My Hanukkah,candle,蠟蠋,1
 aa,37,My Hanukkah,bread,麵包,1
 aa,37,My Hanukkah,toy,玩具,1
-aa,37,My Hanukkah,gift,禮物,1
+aa,37,My Hanukkah,gift,禮物(g),1
 aa,37,My Hanukkah,candy,糖果,1
 aa,37,My Hanukkah,cookie,餅乾,1
 aa,38,My school bus,walk,走,1
@@ -412,7 +412,7 @@ aa,57,Show some love,smile,微笑,1
 aa,57,Show some love,hug,擁抱,1
 aa,57,Show some love,pat,輕拍,1
 aa,57,Show some love,card,卡片,1
-aa,57,Show some love,gift,禮物,1
+aa,57,Show some love,gift,禮物(g),1
 aa,57,Show some love,kiss,親吻,1
 aa,57,Show some love,wink,眨眼,1
 aa,57,Show some love,lick,舔,1
