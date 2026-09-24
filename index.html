@@ -241,7 +241,7 @@
             </div>
         </div>
 
-        <!-- 【新增】：樂透錯題顯示區塊 -->
+        <!-- 樂透錯題顯示區塊 -->
         <div class="stat-card" style="border-color: var(--lottery); background: #fdf2f8; margin-top: 20px; text-align: left;">
             <h3 style="color: var(--lottery); margin-top: 0;">🎁 待補救的樂透錯題</h3>
             <div id="stat-lottery-errors" style="font-size: 15px; color: #475569; line-height: 1.6;">目前沒有樂透錯題。</div>
@@ -264,7 +264,7 @@
             </ul>
         </div>
 
-        <!-- 管理員密碼控制區 (包含積分帳本與備份還原) -->
+        <!-- 管理員密碼控制區 -->
         <div class="admin-card">
             <h3 style="margin-top:0; color: #b91c1c;">⚙️ 管理員後台 (備份、報表與設定)</h3>
             <div id="admin-login-area">
@@ -310,7 +310,6 @@
     </div>
 </div>
 
-<!-- 個別單字紀錄彈出視窗 -->
 <div id="word-history-modal" class="modal-overlay">
     <div class="modal-content">
         <button class="close-btn" onclick="closeWordHistoryModal()">✖</button>
@@ -329,7 +328,7 @@
     const LEDGER_KEY = "points_ledger";
     const MILESTONE_KEY = "tracked_milestones";
     const LOTTERY_KEY = "weekly_lottery_state";
-    const LOTTERY_ERRORS_KEY = "lottery_errors_pool"; // 【新增】：儲存樂透錯題的 Key
+    const LOTTERY_ERRORS_KEY = "lottery_errors_pool"; 
     
     let quiz1History = []; 
     let wordSpecificHistory = {}; 
@@ -342,7 +341,7 @@
     let trackedMilestones = 0;
     let streakData = { currentStreak: 0, lastCompletedDate: "", todayProgress: { date: "", mode1Done: false, mode2Done: false } };
     let lotteryState = { playedWeek: '', isAvailableNow: false };
-    let lotteryErrorsPool = []; // 【新增】：樂透錯題陣列
+    let lotteryErrorsPool = []; 
 
     function getYearWeek() {
         let d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
@@ -358,7 +357,7 @@
             pointsLedger = JSON.parse(localStorage.getItem(LEDGER_KEY)) || [];
             trackedMilestones = parseInt(localStorage.getItem(MILESTONE_KEY)) || 0;
             lotteryState = JSON.parse(localStorage.getItem(LOTTERY_KEY)) || lotteryState;
-            lotteryErrorsPool = JSON.parse(localStorage.getItem(LOTTERY_ERRORS_KEY)) || []; // 載入樂透錯題
+            lotteryErrorsPool = JSON.parse(localStorage.getItem(LOTTERY_ERRORS_KEY)) || []; 
         } catch(e) {}
 
         document.addEventListener('click', function(event) {
@@ -408,8 +407,6 @@
     
     function saveWordSpecificHistory() { try { localStorage.setItem(WORD_SPECIFIC_HISTORY_KEY, JSON.stringify(wordSpecificHistory)); } catch(e) {} }
     function saveStreakData() { try { localStorage.setItem(STREAK_KEY, JSON.stringify(streakData)); } catch(e) {} }
-    
-    // 【新增】：儲存樂透錯題
     function saveLotteryErrors() { try { localStorage.setItem(LOTTERY_ERRORS_KEY, JSON.stringify(lotteryErrorsPool)); } catch(e) {} }
     
     function addLedgerEntry(reason, points) {
@@ -605,7 +602,7 @@
             pointsLedger: pointsLedger,
             trackedMilestones: trackedMilestones,
             lotteryState: lotteryState,
-            lotteryErrorsPool: lotteryErrorsPool // 【新增】加入錯題庫備份
+            lotteryErrorsPool: lotteryErrorsPool
         };
         const jsonString = JSON.stringify(backupData);
         const blob = new Blob([jsonString], { type: "application/json" });
@@ -684,12 +681,11 @@
         else { statusText += `填空 ${m1} \vert{} 選擇 ${m2}`; }
         document.getElementById('stat-streak-status').innerHTML = statusText;
         
-        // 【新增】：顯示樂透錯題名單
+        // 顯示樂透錯題名單
         const errorsContainer = document.getElementById('stat-lottery-errors');
         if (lotteryErrorsPool.length === 0) {
             errorsContainer.innerHTML = "目前沒有樂透錯題，表現完美！";
         } else {
-            // 從 allWords 抓出這些錯題的中文，方便辨識
             const errDetails = lotteryErrorsPool.map(id => {
                 const w = allWords.find(item => item.id === id);
                 return w ? `<strong>${w.word}</strong> (${w.translation})` : `<strong>${id}</strong>`;
@@ -772,14 +768,13 @@
         document.getElementById(`q${mode}-start-screen`).style.display = 'none'; document.getElementById(`q${mode}-result-screen`).style.display = 'none'; document.getElementById(`q${mode}-play-screen`).style.display = 'block'; showQuestion(mode);
     }
 
-    // 【修改】：樂透抽題邏輯，優先撈出错題庫
     function startLottery() {
         let gradWords = allWords.filter(w => getWordEvaluation(w.id).isGraduated);
         if (gradWords.length < 20) return alert("達標字庫不足 20 個，無法開啟樂透！");
 
         let lotteryQuestions = [];
 
-        // 1. 優先塞入先前的「樂透錯題」
+        // 1. 優先撈出樂透錯題
         let errorWordObjs = [];
         lotteryErrorsPool.forEach(errId => {
             let obj = gradWords.find(w => w.id === errId);
@@ -788,7 +783,7 @@
             }
         });
         
-        // 2. 剩下的空位，用「測試次數最少」的達標單字來補
+        // 2. 剩下的空位用次數最少的補
         let remainingGradWords = gradWords.filter(w => !lotteryErrorsPool.includes(w.id));
         let gradWithCounts = remainingGradWords.map(w => ({ word: w, count: (wordSpecificHistory[w.id] || []).length }));
         gradWithCounts.sort((a,b) => a.count - b.count);
@@ -797,7 +792,7 @@
         let fillerWords = gradWithCounts.slice(0, needed).map(i => i.word);
         
         lotteryQuestions = [...errorWordObjs, ...fillerWords];
-        lotteryQuestions.sort(() => Math.random() - 0.5); // 打亂順序
+        lotteryQuestions.sort(() => Math.random() - 0.5); 
 
         currentSession.mode = 'l'; currentSession.currentIndex = 0; currentSession.questions = lotteryQuestions; currentSession.userAnswers = new Array(20).fill("");
         document.getElementById('ql-start-screen').style.display = 'none'; document.getElementById('ql-result-screen').style.display = 'none'; document.getElementById('ql-play-screen').style.display = 'block'; showQuestion('l');
@@ -918,13 +913,11 @@
         resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
     }
 
-    // 【修改】：樂透結算時寫入錯題庫
     function finishLottery() {
         currentSession.userAnswers[currentSession.currentIndex] = document.getElementById('ql-input').value.trim();
         let correctCount = 0;
         let reportHtml = `<h2>🎁 樂透挑戰結算</h2><p>20 題中答對了 <strong style="color:var(--lottery); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
-        // 這次樂透的錯題暫存
         let currentErrors = [];
 
         currentSession.questions.forEach((wordObj, i) => {
@@ -938,18 +931,15 @@
             }
         });
 
-        // 更新錯題庫邏輯：
-        // 1. 如果這次全對，清空錯題庫
-        // 2. 如果有錯，將這次的錯題覆蓋上去（或累加，這邊設定為覆蓋更新為最新一批錯題）
         if (correctCount === 20) {
             lotteryErrorsPool = []; 
             addLedgerEntry("本週突發樂透挑戰 20 題全對", 1);
             reportHtml = `<h2 style="color:var(--lottery);">🎉 恭喜中獎！🎉</h2><p>太強了！20 題全對，已將 1 點積分存入帳本，且補救錯題庫已清空！</p>` + reportHtml;
         } else {
-            lotteryErrorsPool = [...new Set([...lotteryErrorsPool, ...currentErrors])]; // 累加並去重
+            lotteryErrorsPool = [...new Set([...lotteryErrorsPool, ...currentErrors])]; 
             reportHtml = `<h2>💦 差一點點！</h2><p>再接再厲！錯題已記錄至補救區，下次樂透會優先考出！</p>` + reportHtml;
         }
-        saveLotteryErrors(); // 存檔
+        saveLotteryErrors(); 
 
         reportHtml += `</div><br><button class="btn-submit" onclick="switchTab('list-tab')">返回清單</button>`;
         
