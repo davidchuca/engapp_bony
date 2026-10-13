@@ -163,7 +163,7 @@ aa,22,The Fort,fort,堡壘,1
 aa,23,Four,bus,巴士,1
 aa,23,Four,wagon,手拉車,1
 aa,23,Four,cart,推車,1
-aa,23,Four,airplane,飛機,1
+aa,23,Four,airplane,飛機(a),1
 aa,23,Four,boat,船,1
 aa,23,Four,truck,卡車,1
 aa,23,Four,van,廂型車,1
@@ -296,7 +296,7 @@ aa,41,On,house,房子,1
 aa,41,On,bike,腳踏車,1
 aa,41,On,swing,鞦韆,1
 aa,41,On,bed,床,1
-aa,41,On,airplane,飛機,1
+aa,41,On,airplane,飛機(a),1
 aa,41,On,fence,圍籬,1
 aa,41,On,table,桌子,1
 aa,41,On,skates,溜冰鞋,1
