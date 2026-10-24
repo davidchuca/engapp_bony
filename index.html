@@ -36,6 +36,7 @@
         .word-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .word-table th, .word-table td { border-bottom: 1px solid #e2e8f0; padding: 12px; text-align: left; }
         .word-table th { background: #f1f5f9; }
+        .pos-badge { font-size: 13px; color: #fff; background-color: #64748b; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: normal; }
         .btn-audio { background: none; border: none; font-size: 18px; cursor: pointer; margin-right: 5px; transition: transform 0.1s; }
         .btn-audio:hover { transform: scale(1.2); }
         .quiz-container { text-align: center; padding: 20px 10px; }
@@ -122,13 +123,14 @@
                     <th>課別/單元</th>
                     <th>英文單字</th>
                     <th>發音</th> 
+                    <th>詞性</th>  <!-- 【新增】詞性欄位 -->
                     <th>中文解釋</th>
                     <th>熟練度狀態</th>
                     <th class="admin-only">個別紀錄</th>
                 </tr>
             </thead>
             <tbody id="word-list-body">
-                <tr><td colspan="6" style="text-align:center;">請先選擇上方單元</td></tr>
+                <tr><td colspan="7" style="text-align:center;">請先選擇上方單元</td></tr>
             </tbody>
         </table>
     </div>
@@ -388,6 +390,9 @@
             const keyTitle = keys.find(k => k.toLowerCase().includes('title'));
             const keyWord = keys.find(k => k.toLowerCase().includes('word'));
             const keyTrans = keys.find(k => k.toLowerCase().includes('translation') || k.toLowerCase().includes('trans'));
+            
+            // 【新增】：動態抓取詞性欄位 (支援大小寫容錯)
+            const keyPos = keys.find(k => k.toLowerCase() === 'parts of speech' || k.toLowerCase() === 'pos');
 
             if (keyWord && keyTrans && row[keyWord] && row[keyTrans]) {
                 let cleanLesson = keyLesson && row[keyLesson] ? String(row[keyLesson]).trim() : '1';
@@ -395,8 +400,17 @@
                 let cleanWord = String(row[keyWord]).trim();
                 let cleanTrans = String(row[keyTrans]).trim();
                 let wordId = cleanWord.toLowerCase(); 
+                
+                let posRaw = keyPos && row[keyPos] ? String(row[keyPos]).trim() : '';
 
-                allWords.push({ lesson: cleanLesson, title: cleanTitle, word: cleanWord, translation: cleanTrans, id: wordId });
+                allWords.push({ 
+                    lesson: cleanLesson, 
+                    title: cleanTitle, 
+                    word: cleanWord, 
+                    translation: cleanTrans, 
+                    pos: posRaw,  // 【新增】儲存詞性
+                    id: wordId 
+                });
             }
         });
 
@@ -492,11 +506,14 @@
 
     function renderWordList() {
         const tbody = document.getElementById('word-list-body');
-        if (activePool.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">無符合條件的單字</td></tr>'; return; }
+        if (activePool.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">無符合條件的單字</td></tr>'; return; }
         
         tbody.innerHTML = activePool.map(w => {
             const evalObj = getWordEvaluation(w.id);
             const statusHtml = `<span class="status-dot ${evalObj.classColor}"></span> <strong>${evalObj.text}</strong>`;
+            // 【新增】：顯示詞性標籤
+            const posBadge = w.pos ? `<span class="pos-badge">${w.pos}</span>` : '';
+            
             return `
             <tr>
                 <td>L${w.lesson} - ${w.title}</td>
@@ -505,6 +522,7 @@
                     <button class="btn-audio" onclick="speak('${w.word}', 0.9)" title="正常速度">🔊</button>
                     <button class="btn-audio" onclick="speak('${w.word}', 0.4)" title="慢速發音">🐢</button>
                 </td>
+                <td>${posBadge}</td> <!-- 詞性欄位 -->
                 <td>${w.translation}</td>
                 <td>${statusHtml}</td>
                 <td class="admin-only"><button class="btn-nav" style="padding: 6px 12px; font-size: 14px; background: #8b5cf6;" onclick="openWordHistoryModal('${w.id}')">📊 查看</button></td>
@@ -520,7 +538,7 @@
         
         const evalObj = getWordEvaluation(wordId);
         let evalHtml = `目前燈號評比：<span class="status-dot ${evalObj.classColor}" style="margin-left:8px;"></span> <strong>${evalObj.text}</strong>`;
-        if (evalObj.accuracy !== null) { evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(滾動擷取最新 5 次正確率：${evalObj.accuracy}\% / 總測驗次數：${evalObj.total} 次)</span>`; } 
+        if (evalObj.accuracy !== null) { evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(滾動擷取最新 5 次正確率：${evalObj.accuracy}% / 總測驗次數：${evalObj.total} 次)</span>`; } 
         else { evalHtml += `<br><span style="font-size: 14px; color: #64748b;">(總測驗次數：${evalObj.total} 次，不足 3 次暫不評比)</span>`; }
         document.getElementById('modal-word-evaluation').innerHTML = evalHtml;
         
@@ -556,6 +574,7 @@
             return {
                 "課別/單元": "L" + w.lesson + " (" + w.title + ")",
                 "英文單字": w.word,
+                "詞性": w.pos,  // 【新增】匯出時包含詞性
                 "中文解釋": w.translation,
                 "熟練度": evalObj.text,
                 "近期正確率": evalObj.accuracy !== null ? evalObj.accuracy + "%" : "無",
@@ -593,7 +612,7 @@
         XLSX.writeFile(wb, "英文單字學習報表_" + new Date().toISOString().split('T')[0] + ".xlsx");
     }
 
-    // ================= 備份與還原系統 (iPad/iOS 友善版) =================
+    // ================= 備份與還原系統 =================
     function exportData() {
         const backupData = {
             quiz1History: quiz1History,
@@ -663,7 +682,7 @@
     function renderStats() {
         let totalWordsCount = allWords.length;
         let graduatedCount = allWords.filter(w => getWordEvaluation(w.id).isGraduated).length;
-        document.getElementById('stat-words-ratio').innerText = `${graduatedCount} /${totalWordsCount}`;
+        document.getElementById('stat-words-ratio').innerText = `${graduatedCount} / ${totalWordsCount}`;
         document.getElementById('stat-total-points').innerText = Math.max(0, getTotalPoints());
 
         const todayStr = new Date().toDateString();
@@ -678,10 +697,9 @@
         let m1 = (streakData.todayProgress.date === todayStr && streakData.todayProgress.mode1Done) ? "🟢" : "⚪";
         let m2 = (streakData.todayProgress.date === todayStr && streakData.todayProgress.mode2Done) ? "🟢" : "⚪";
         if (streakData.lastCompletedDate === todayStr) { statusText = `<span style="color:var(--success);">✅ 今日雙模式任務達成！</span>`; } 
-        else { statusText += `填空 ${m1} \vert{} 選擇 ${m2}`; }
+        else { statusText += `填空 ${m1} | 選擇 ${m2}`; }
         document.getElementById('stat-streak-status').innerHTML = statusText;
         
-        // 顯示樂透錯題名單
         const errorsContainer = document.getElementById('stat-lottery-errors');
         if (lotteryErrorsPool.length === 0) {
             errorsContainer.innerHTML = "目前沒有樂透錯題，表現完美！";
@@ -774,7 +792,6 @@
 
         let lotteryQuestions = [];
 
-        // 1. 優先撈出樂透錯題
         let errorWordObjs = [];
         lotteryErrorsPool.forEach(errId => {
             let obj = gradWords.find(w => w.id === errId);
@@ -783,7 +800,6 @@
             }
         });
         
-        // 2. 剩下的空位用次數最少的補
         let remainingGradWords = gradWords.filter(w => !lotteryErrorsPool.includes(w.id));
         let gradWithCounts = remainingGradWords.map(w => ({ word: w, count: (wordSpecificHistory[w.id] || []).length }));
         gradWithCounts.sort((a,b) => a.count - b.count);
@@ -800,10 +816,10 @@
 
     function showQuestion(mode) {
         const idx = currentSession.currentIndex; const wordObj = currentSession.questions[idx];
-        document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} /${currentSession.questions.length} 題`;
+        document.getElementById(`q${mode}-progress`).innerText = `第 ${idx + 1} / ${currentSession.questions.length} 題`;
         
         if(mode !== 'l') {
-            const evalObj = getWordEvaluation(wordObj.id); document.getElementById(`q${mode}-stats`).innerText = `目前燈號：${evalObj.badge}${evalObj.text}`;
+            const evalObj = getWordEvaluation(wordObj.id); document.getElementById(`q${mode}-stats`).innerText = `目前燈號：${evalObj.badge} ${evalObj.text}`;
         }
         
         document.getElementById(`q${mode}-prev`).disabled = (idx === 0);
@@ -811,17 +827,20 @@
         if (idx === currentSession.questions.length - 1) { document.getElementById(`q${mode}-next`).style.display = 'none'; if(finishBtn) finishBtn.style.display = 'inline-block'; } 
         else { document.getElementById(`q${mode}-next`).style.display = 'inline-block'; if(finishBtn) finishBtn.style.display = 'none'; }
 
-        // 【修復】：移除有問題的預設值寫法，改用安全的方式
         let savedInput = currentSession.userAnswers[idx];
         if (!savedInput) savedInput = '';
+        
+        // 【新增】：題目帶上詞性顯示
+        const posText = wordObj.pos ? ` (${wordObj.pos})` : '';
 
         if (mode === 1 || mode === 'l') {
-            document.getElementById(`q${mode}-question`).innerText = `請寫出英文：「 ${wordObj.translation} 」`;
+            document.getElementById(`q${mode}-question`).innerText = `請寫出英文：「 ${wordObj.translation} 」${posText}`;
             const inputField = document.getElementById(`q${mode}-input`); inputField.value = savedInput; 
             document.getElementById(`q${mode}-feedback`).innerText = savedInput ? "💡 本題已暫存答案" : "";
             inputField.focus();
         } else {
-            document.getElementById('q2-question').innerText = wordObj.word;
+            // 英翻中選擇題，題目加上詞性
+            document.getElementById('q2-question').innerText = `${wordObj.word}${posText}`;
             const options = currentSession.optionsData[idx]; 
             const optionsContainer = document.getElementById('q2-options');
             optionsContainer.innerHTML = options.map(opt => {
@@ -871,7 +890,6 @@
             const userAns = currentSession.userAnswers[i].toLowerCase();
             let isCorrect = mode === 1 ? (userAns === wordObj.word.toLowerCase()) : (currentSession.userAnswers[i] === wordObj.translation);
             
-            // 【修復】：一樣移除有問題的寫法
             let finalAns = currentSession.userAnswers[i];
             if (!finalAns || finalAns.trim() === '') finalAns = '空';
 
@@ -931,7 +949,6 @@
         currentSession.questions.forEach((wordObj, i) => {
             const userAns = currentSession.userAnswers[i].toLowerCase(); let isCorrect = (userAns === wordObj.word.toLowerCase());
             
-            // 【修復】：一樣移除有問題的寫法
             let finalAns = currentSession.userAnswers[i];
             if (!finalAns || finalAns.trim() === '') finalAns = '空';
 
