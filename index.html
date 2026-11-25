@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>英文單字智慧測驗系統 - 終極報表與保險版</title>
     <!-- 引入 CSV 解析套件 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script type="text/javascript" nonce="8e28d6c5e0d34f6a9725618cfac" src="//local.adguard.org?ts=1795569539950&amp;type=content-script&amp;dmn=contribution.usercontent.google.com&amp;url=https%3A%2F%2Fcontribution.usercontent.google.com%2Fdownload%3Fc%3DCgxiYXJkX3N0b3JhZ2USUBINcmVzcG9uc2VfZGF0YRo_CjAyNTI1YWU2YjAwNTg3NTcwMDAwNjYxMGZjYTBlYmVkMjA0N2RhZDc4M2IwZjhlODISCxIHEJm1m6uyARgB%26filename%3Dindex_fixed.html%26opi%3D103135050&amp;app=chrome.exe&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=1&amp;stealth=1&amp;st-dnt"></script><script type="text/javascript" nonce="8e28d6c5e0d34f6a9725618cfac" src="//local.adguard.org?ts=1795569539950&amp;name=AdGuard%20Extra&amp;type=user-script"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <!-- 引入 Excel 匯出套件 (SheetJS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
@@ -787,31 +787,69 @@
     }
 
     function startLottery() {
-        let gradWords = allWords.filter(w => getWordEvaluation(w.id).isGraduated);
+        // 1. 篩選達標單字並依 id 去重，避免同單字因不同詞性/課別重複出現
+        const gradMap = new Map();
+        allWords.forEach(w => {
+            if (getWordEvaluation(w.id).isGraduated && !gradMap.has(w.id)) {
+                gradMap.set(w.id, w);
+            }
+        });
+        const gradWords = Array.from(gradMap.values());
+
         if (gradWords.length < 20) return alert("達標字庫不足 20 個，無法開啟樂透！");
 
-        let lotteryQuestions = [];
-
-        let errorWordObjs = [];
+        // 2. 優先放入樂透錯題庫的單字 (上限 20 題)
+        const errorWordObjs = [];
         lotteryErrorsPool.forEach(errId => {
-            let obj = gradWords.find(w => w.id === errId);
+            const obj = gradMap.get(errId);
             if (obj && errorWordObjs.length < 20) {
                 errorWordObjs.push(obj);
             }
         });
-        
-        let remainingGradWords = gradWords.filter(w => !lotteryErrorsPool.includes(w.id));
-        let gradWithCounts = remainingGradWords.map(w => ({ word: w, count: (wordSpecificHistory[w.id] || []).length }));
-        gradWithCounts.sort((a,b) => a.count - b.count);
-        
-        let needed = 20 - errorWordObjs.length;
-        let fillerWords = gradWithCounts.slice(0, needed).map(i => i.word);
-        
-        lotteryQuestions = [...errorWordObjs, ...fillerWords];
-        lotteryQuestions.sort(() => Math.random() - 0.5); 
 
-        currentSession.mode = 'l'; currentSession.currentIndex = 0; currentSession.questions = lotteryQuestions; currentSession.userAnswers = new Array(20).fill("");
-        document.getElementById('ql-start-screen').style.display = 'none'; document.getElementById('ql-result-screen').style.display = 'none'; document.getElementById('ql-play-screen').style.display = 'block'; showQuestion('l');
+        // 3. 處理剩餘名額：先排除已入選的錯題
+        const errorIdSet = new Set(errorWordObjs.map(w => w.id));
+        const remainingGradWords = gradWords.filter(w => !errorIdSet.has(w.id));
+
+        // 先隨機打散，確保測驗次數相同的單字不會每次都照 CSV 順序被抽到
+        remainingGradWords.sort(() => Math.random() - 0.5);
+
+        const needed = 20 - errorWordObjs.length;
+        let fillerWords = [];
+
+        if (needed > 0) {
+            // 依測驗次數由少到多排序
+            const gradWithCounts = remainingGradWords.map(w => ({
+                word: w,
+                count: (wordSpecificHistory[w.id] || []).length
+            }));
+            gradWithCounts.sort((a, b) => a.count - b.count);
+
+            // 依規則取最多 10 個「測試次數最少」的字
+            const leastCountQuota = Math.min(10, needed);
+            const leastTestedWords = gradWithCounts.slice(0, leastCountQuota).map(i => i.word);
+
+            // 剩餘名額從其餘達標字中完全隨機抽取
+            const randomQuota = needed - leastTestedWords.length;
+            const restPool = gradWithCounts.slice(leastCountQuota).map(i => i.word);
+            restPool.sort(() => Math.random() - 0.5);
+            const randomWords = restPool.slice(0, randomQuota);
+
+            fillerWords = [...leastTestedWords, ...randomWords];
+        }
+
+        // 4. 合併並打亂出題順序
+        const lotteryQuestions = [...errorWordObjs, ...fillerWords].sort(() => Math.random() - 0.5);
+
+        currentSession.mode = 'l';
+        currentSession.currentIndex = 0;
+        currentSession.questions = lotteryQuestions;
+        currentSession.userAnswers = new Array(lotteryQuestions.length).fill("");
+
+        document.getElementById('ql-start-screen').style.display = 'none';
+        document.getElementById('ql-result-screen').style.display = 'none';
+        document.getElementById('ql-play-screen').style.display = 'block';
+        showQuestion('l');
     }
 
     function showQuestion(mode) {
@@ -945,41 +983,53 @@
         let reportHtml = `<h2>🎁 樂透挑戰結算</h2><p>20 題中答對了 <strong style="color:var(--lottery); font-size:24px;">{{SCORE}}</strong> 題！</p><div class="report-box">`;
 
         let currentErrors = [];
+        const testDateString = new Date().toLocaleString('zh-TW');
 
         currentSession.questions.forEach((wordObj, i) => {
-            const userAns = currentSession.userAnswers[i].toLowerCase(); let isCorrect = (userAns === wordObj.word.toLowerCase());
-            
+            const userAns = currentSession.userAnswers[i].toLowerCase();
+            let isCorrect = (userAns === wordObj.word.toLowerCase());
+
             let finalAns = currentSession.userAnswers[i];
             if (!finalAns || finalAns.trim() === '') finalAns = '空';
 
-            if (isCorrect) { 
-                correctCount++; 
-                reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`; 
-            } else { 
+            if (isCorrect) {
+                correctCount++;
+                // 【新增】答對時寫入個別紀錄，增加測驗次數，避免下次樂透又抽到同一批字
+                if (!wordSpecificHistory[wordObj.id]) wordSpecificHistory[wordObj.id] = [];
+                wordSpecificHistory[wordObj.id].push({ date: testDateString, isCorrect: true, userAnswer: currentSession.userAnswers[i] || '' });
+
+                reportHtml += `<div class="report-item"><span>⭕ <strong>${wordObj.word}</strong></span><span style="color:var(--success)">${wordObj.translation}</span></div>`;
+            } else {
                 currentErrors.push(wordObj.id);
-                reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">答案: ${finalAns} → 正確: ${wordObj.word}</span></div>`; 
+                reportHtml += `<div class="report-item"><span>❌ <strong>${wordObj.word}</strong></span><span style="color:var(--danger)">答案: ${finalAns} → 正確: ${wordObj.word}</span></div>`;
             }
         });
 
+        // 【新增】儲存更新後的單字測驗紀錄
+        saveWordSpecificHistory();
+
         if (correctCount === 20) {
-            lotteryErrorsPool = []; 
+            lotteryErrorsPool = [];
             addLedgerEntry("本週突發樂透挑戰 20 題全對", 1);
             reportHtml = `<h2 style="color:var(--lottery);">🎉 恭喜中獎！🎉</h2><p>太強了！20 題全對，已將 1 點積分存入帳本，且補救錯題庫已清空！</p>` + reportHtml;
         } else {
-            lotteryErrorsPool = [...new Set([...lotteryErrorsPool, ...currentErrors])]; 
+            lotteryErrorsPool = [...new Set([...lotteryErrorsPool, ...currentErrors])];
             reportHtml = `<h2>💦 差一點點！</h2><p>再接再厲！錯題已記錄至補救區，下次樂透會優先考出！</p>` + reportHtml;
         }
-        saveLotteryErrors(); 
+        saveLotteryErrors();
 
         reportHtml += `</div><br><button class="btn-submit" onclick="switchTab('list-tab')">返回清單</button>`;
-        
-        lotteryState.playedWeek = getYearWeek(); lotteryState.isAvailableNow = false;
-        try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch(e){}
+
+        lotteryState.playedWeek = getYearWeek();
+        lotteryState.isAvailableNow = false;
+        try { localStorage.setItem(LOTTERY_KEY, JSON.stringify(lotteryState)); } catch (e) {}
         document.getElementById('btn-lottery-tab').style.display = 'none';
 
-        renderStats(); document.getElementById('ql-play-screen').style.display = 'none';
+        renderStats();
+        document.getElementById('ql-play-screen').style.display = 'none';
         const resScr = document.getElementById('ql-result-screen');
-        resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount); resScr.style.display = 'block';
+        resScr.innerHTML = reportHtml.replace("{{SCORE}}", correctCount);
+        resScr.style.display = 'block';
     }
 
     function toggleHistory1() { const s = document.getElementById('q1-history-screen'); if (s.style.display === 'none') { renderHistory1(); s.style.display = 'block'; } else { s.style.display = 'none'; } }
